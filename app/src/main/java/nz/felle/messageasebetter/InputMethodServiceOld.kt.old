@@ -1,0 +1,175 @@
+package nz.felle.messageasebetter
+
+import android.os.Handler
+import android.os.Looper
+import android.text.InputType
+import android.view.MotionEvent
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
+import android.widget.Button
+import kotlin.math.max
+import kotlin.math.roundToLong
+
+class InputMethodServiceOld: android.inputmethodservice.InputMethodService() {
+	private var view: InputMethodView? = null
+	/*
+	private var _caps = false
+	private var _numMode = false
+	private var keyTable: Array<Button?> = arrayOfNulls(3 * 3)
+	private lateinit var backspaceRepeater: Repeater
+	private lateinit var spaceRepeater: Repeater
+	private lateinit var zeroRepeater: Repeater
+	private lateinit var zeroSwitcher: ViewSwitcher
+	private lateinit var actButton: Button
+
+	private var caps
+		get() = _caps
+		set(caps) = _setCaps(caps)
+
+	private var numMode
+		get() = _numMode
+		set(mode) = _setNumMode(mode)
+
+	private fun _setCaps(newCaps: Boolean) {
+		val oldCaps = caps
+		if (newCaps == oldCaps) {
+			return
+		}
+
+		val names = if (newCaps) {
+			NORMAL_TABLE_CAPS
+		} else {
+			NORMAL_TABLE
+		}
+		for ((index, key) in keyTable.withIndex()) {
+			key?.text = names[index].toString()
+		}
+
+		_caps = newCaps
+	}
+
+	private fun _setNumMode(newMode: Boolean) {
+		val oldMode = numMode
+		if (newMode == oldMode) {
+			return
+		}
+
+		for ((index, key) in keyTable.withIndex()) {
+			key?.text = charForMode(newMode, false, index).toString()
+		}
+
+		zeroSwitcher.displayedChild = if (newMode) {
+			1
+		} else {
+			0
+		}
+
+		_numMode = newMode
+	}
+
+	private fun insert(char: Char) {
+		currentInputConnection.commitText(char.toString(), 1)
+	}
+
+	private fun onClick(index: Int) {
+		insert(charForMode(this.numMode, this.caps, index))
+	}
+
+	private fun onLongClick(index: Int) {
+		insert(charForMode(!this.numMode, this.caps, index))
+	}
+	*/
+
+	override fun onCreateInputView(): View {
+		super.onCreateInputView()
+
+		/*
+		backspaceRepeater = Repeater(currentInputConnection) { conn ->
+			conn.deleteSurroundingTextInCodePoints(1, 0)
+		}
+		spaceRepeater = Repeater(currentInputConnection, ' ')
+		zeroRepeater = Repeater(currentInputConnection, '0')
+
+		val layout = layoutInflater.inflate(R.layout.keyboard, null) as TableLayout
+
+		val resources = arrayOf(
+			R.id.button_0_0,
+			R.id.button_0_1,
+			R.id.button_0_2,
+			R.id.button_1_0,
+			R.id.button_1_1,
+			R.id.button_1_2,
+			R.id.button_2_0,
+			R.id.button_2_1,
+			R.id.button_2_2,
+		)
+
+		for ((index, resource) in resources.withIndex()) {
+			val button = layout.findViewById<Button>(resource)
+			button.setOnClickListener { onClick(index) }
+			button.setOnLongClickListener { onLongClick(index); true }
+			keyTable[index] = button
+		}
+
+		zeroSwitcher = layout.findViewById(R.id.zero_switcher)
+		layout.findViewById<Button>(R.id.button_backspace).register(backspaceRepeater)
+		layout.findViewById<Button>(R.id.button_space).register(spaceRepeater)
+		layout.findViewById<Button>(R.id.button_space2).register(spaceRepeater)
+		layout.findViewById<Button>(R.id.button_num).setOnClickListener { this.numMode = !this.numMode }
+		layout.findViewById<Button>(R.id.button_move).setOnTouchListener { view, event ->
+			if (event.actionMasked == MotionEvent.ACTION_MOVE) {
+			}
+			true
+		}
+		layout.findViewById<Button>(R.id.button_zero).register(zeroRepeater)
+
+		actButton = layout.findViewById(R.id.button_act)
+
+		return layout
+		*/
+
+		val view = layoutInflater.inflate(R.layout.keyboard, null) as InputMethodView
+		// bodge!!
+		view.conn = currentInputConnection
+		this.view = view
+		return view
+	}
+
+	override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+		super.onStartInputView(info, restarting)
+
+		view!!.conn = currentInputConnection
+
+		view!!.numMode = when ((info?.inputType ?: 0) and InputType.TYPE_MASK_CLASS) {
+			InputType.TYPE_CLASS_NUMBER, InputType.TYPE_CLASS_PHONE -> true
+			else -> false
+		}
+
+		val imeOptions = (info?.imeOptions ?: 0)
+		if (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION > 0) {
+			view!!.actAction = EditorInfo.IME_ACTION_NONE
+		} else {
+			view!!.actAction = imeOptions and EditorInfo.IME_MASK_ACTION
+		}
+
+		view!!.caps = (info?.initialCapsMode ?: 0) > 0
+	}
+
+	override fun onUpdateSelection(
+		oldSelStart: Int,
+		oldSelEnd: Int,
+		newSelStart: Int,
+		newSelEnd: Int,
+		candidatesStart: Int,
+		candidatesEnd: Int
+	) {
+		super.onUpdateSelection(oldSelStart,
+			oldSelEnd,
+			newSelStart,
+			newSelEnd,
+			candidatesStart,
+			candidatesEnd)
+		view!!.updateSelection(newSelStart, newSelEnd)
+	}
+}

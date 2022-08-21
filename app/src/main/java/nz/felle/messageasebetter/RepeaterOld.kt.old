@@ -1,0 +1,48 @@
+package nz.felle.messageasebetter
+
+import android.os.Handler
+import android.os.Looper
+import kotlin.math.max
+import kotlin.math.roundToLong
+
+class RepeaterOld constructor(
+	private var action: () -> Unit,
+): Runnable {
+	private val minInterval = 50.0 // millis
+	private val initialInterval: Long = 800 // millis
+	private val speedupFactor = 0.85
+	private val secondaryInterval = 300.0
+	private var interval = secondaryInterval // millis
+	private var handler = Handler(Looper.getMainLooper())
+
+	private var _hasExecuted = false
+	var hasExecuted = _hasExecuted
+		private set
+
+	private fun shortenInterval() {
+		interval *= speedupFactor
+		interval = max(interval, minInterval)
+	}
+
+	override fun run() {
+		_hasExecuted = true
+		action()
+		handler.postDelayed(this, interval.roundToLong())
+		shortenInterval()
+	}
+
+	private fun reset() {
+		_hasExecuted = false
+		interval = secondaryInterval
+	}
+
+	fun start() {
+		stop()
+		reset()
+		handler.postDelayed(this, initialInterval)
+	}
+
+	fun stop() {
+		handler.removeCallbacks(this)
+	}
+}
