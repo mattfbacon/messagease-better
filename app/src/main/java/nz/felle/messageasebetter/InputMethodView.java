@@ -1,9 +1,14 @@
 package nz.felle.messageasebetter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,6 +22,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
@@ -65,6 +71,73 @@ public final class InputMethodView extends View {
 			insert('\n');
 		} else {
 			conn.performEditorAction(actAction);
+		}
+	}
+
+	public void goToStartOfLine() {
+		goToStartOfLine(false);
+	}
+
+	public void goToStartOfLine(final boolean keepOtherEnd) {
+		final int CHUNK = 100;
+		int position = selection.start;
+		final int oldEnd = selection.end;
+		while (true) {
+			final CharSequence chs = conn.getTextBeforeCursor(CHUNK, 0);
+			if (chs == null) {
+				return;
+			}
+			final int len = chs.length();
+			// start at 1 to allow going to start of previous line if we are at start of current line
+			if (len >= 1) {
+				for (int i = 1; i < len; ++i) {
+					if (chs.charAt(len - i - 1) == '\n') {
+						position -= i;
+						conn.setSelection(position, keepOtherEnd ? oldEnd : position);
+						return;
+					}
+				}
+			}
+			if (len < CHUNK) {
+				conn.setSelection(0, keepOtherEnd ? oldEnd : 0);
+				return;
+			}
+			position -= CHUNK;
+			conn.setSelection(position, keepOtherEnd ? oldEnd : position);
+		}
+	}
+
+	public void goToEndOfLine() {
+		goToEndOfLine(false);
+	}
+
+	public void goToEndOfLine(final boolean keepOtherEnd) {
+		final int CHUNK = 100;
+		int position = selection.end;
+		final int oldStart = selection.start;
+		while (true) {
+			final CharSequence chs = conn.getTextAfterCursor(CHUNK, 0);
+			if (chs == null) {
+				return;
+			}
+			final int len = chs.length();
+			// start at 1 to allow going to end of next line if we are at end of current line
+			if (len >= 1) {
+				for (int i = 1; i < len; ++i) {
+					if (chs.charAt(i) == '\n') {
+						position += i;
+						conn.setSelection(keepOtherEnd ? oldStart : position, position);
+						return;
+					}
+				}
+			}
+			if (len < CHUNK) {
+				position += len;
+				conn.setSelection(keepOtherEnd ? oldStart : position, position);
+				return;
+			}
+			position += CHUNK;
+			conn.setSelection(keepOtherEnd ? oldStart : position, position);
 		}
 	}
 
@@ -168,6 +241,10 @@ public final class InputMethodView extends View {
 		conn.commitText(Character.toString(ch), 1);
 	}
 
+	void setSelection(int start, int end) {
+		conn.setSelection(start, end);
+	}
+
 	private boolean deleteSelection() {
 		if (!selection.isNonCursor()) {
 			return false;
@@ -216,15 +293,59 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	private final static int SPEECH_REQUEST_CODE = 0;
+	private boolean isDark() {
+		return getResources().getConfiguration().isNightModeActive();
+	}
 
 	void takeVoiceInput() {
-		/*
 		final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		getContext().getApplicationContext()
-		*/
-		Log.e("takeVoiceInput", "not implemented");
+		intent.putExtra(RecognizerIntent.EXTRA_ENABLE_FORMATTING, RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY);
+		intent.putExtra(RecognizerIntent.EXTRA_HIDE_PARTIAL_TRAILING_PUNCTUATION, false);
+		intent.putExtra(RecognizerIntent.EXTRA_MASK_OFFENSIVE_WORDS, false);
+
+		final SpeechRecognizer recognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+
+		final InputMethodView view = this;
+
+		recognizer.setRecognitionListener(new RecognitionListener() {
+			@Override
+			public void onResults(final Bundle resultsBundle) {
+				final ArrayList<String> results = resultsBundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+				if (results.size() > 0) {
+					final String text = results.get(0);
+					view.conn.commitText(text, 1);
+				}
+			}
+
+			@Override
+			public void onError(final int error) {
+				Log.e("nz.felle.messageasebetter takeVoiceInput", "onError " + Integer.toString(error));
+			}
+
+			@Override
+			public void onEvent(final int event, final Bundle params) {}
+
+			@Override
+			public void onReadyForSpeech(final Bundle params) {}
+
+			@Override
+			public void onPartialResults(final Bundle params) {}
+
+			@Override
+			public void onBufferReceived(final byte[] _data) {}
+
+			@Override
+			public void onEndOfSpeech() {}
+
+			@Override
+			public void onBeginningOfSpeech() {}
+
+			@Override
+			public void onRmsChanged(final float _dbms) {}
+		});
+
+		recognizer.startListening(intent);
 	}
 
 	@Override
@@ -247,7 +368,7 @@ public final class InputMethodView extends View {
 	private void drawButton(final @NonNull Canvas canvas, final float x, final float y, final float width, final float height, @Nullable ActionShower key) {
 		drawButton(canvas, x, y, width, height);
 		if (key != null) {
-			key.show(canvas, x + (width / 2), y + (height / 2), paints.keyTextPaint);
+			key.show(canvas, x + (width / 2), y + (height / 2), paints.keyTextPaint, isDark());
 		}
 	}
 
@@ -281,12 +402,12 @@ public final class InputMethodView extends View {
 
 				final @NonNull PointF thisLetter = motion.offset(centerX, centerY, offsetX, offsetY);
 
-				actionShower.show(canvas, thisLetter.x, thisLetter.y, paint);
+				actionShower.show(canvas, thisLetter.x, thisLetter.y, paint, isDark());
 			}
 		}
 	}
 
-	boolean processLine(final boolean longPress) {
+	boolean processLine() {
 		final float motionThresholdX = this.buttonWidth() / 4;
 		final float motionThresholdY = this.buttonHeight() / 4;
 		final @NonNull Line line = Objects.requireNonNull(this.line);
@@ -311,20 +432,12 @@ public final class InputMethodView extends View {
 			.get(actionCol)
 			.get(motion);
 		if (action != null) {
-			if (longPress) {
-				return action.executeLongPress(this);
-			} else {
-				action.execute(this);
-				return true;
-			}
+			action.execute(this);
+			return true;
 		} else {
 			complainAboutMissingAction(actionRow, actionCol, motion);
 			return false;
 		}
-	}
-
-	void processLine() {
-		assert processLine(false);
 	}
 
 	@Override

@@ -47,7 +47,7 @@ final class TextShower extends ActionShower {
 		final float centerX,
 		final float centerY,
 		final @NonNull
-			Paint paint) {
+			Paint paint, final boolean dark) {
 		// we do a little caching
 		if (Float.isNaN(textOffset)) {
 			final @NonNull Rect bounds = new Rect();

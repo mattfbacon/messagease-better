@@ -1,5 +1,6 @@
 package nz.felle.messageasebetter;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -59,15 +60,6 @@ final class KeyAction extends Action {
 		if (key != NONE) {
 			view.insert(key);
 		}
-	}
-
-	@Override
-	public boolean executeLongPress(final @NonNull InputMethodView view) {
-		if (!view.getNumMode()) {
-			view.insert(numKey);
-			return true;
-		}
-		return false;
 	}
 
 	private final @NonNull TextShower shower = new TextShower("");

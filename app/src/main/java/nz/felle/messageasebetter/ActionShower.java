@@ -7,6 +7,6 @@ import android.graphics.PointF;
 import androidx.annotation.NonNull;
 
 abstract class ActionShower {
-	abstract void show(@NonNull Canvas canvas, float centerX, float centerY, @NonNull Paint paint);
+	abstract void show(@NonNull Canvas canvas, float centerX, float centerY, @NonNull Paint paint, boolean dark);
 	void initialize(@NonNull InputMethodView view) {}
 }

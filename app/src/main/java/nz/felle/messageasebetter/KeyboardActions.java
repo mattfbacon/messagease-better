@@ -1,5 +1,6 @@
 package nz.felle.messageasebetter;
 
+import android.util.Log;
 import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
@@ -83,8 +84,9 @@ import java.util.Map;
 			Map.of(
 				Motion.NONE, new Action() {
 					private final @NonNull
-					IconShower ifNum = new IconShower(R.drawable.ic_abc_mode);
-					private final @NonNull IconShower ifNotNum = new IconShower(R.drawable.ic_num_mode);
+					IconShower ifNum = new IconShower(R.drawable.ic_abc_mode, false);
+					private final @NonNull
+					IconShower ifNotNum = new IconShower(R.drawable.ic_num_mode, false);
 
 					@Override
 					public void execute(final @NonNull InputMethodView view) {
@@ -102,7 +104,19 @@ import java.util.Map;
 				Motion.UP_LEFT, new ContextMenuAction(R.drawable.ic_select_all, android.R.id.selectAll),
 				Motion.UP_RIGHT, new ContextMenuAction(R.drawable.ic_copy, android.R.id.copy),
 				Motion.DOWN_RIGHT, new ContextMenuAction(R.drawable.ic_paste, android.R.id.paste),
-				Motion.DOWN_LEFT, new ContextMenuAction(R.drawable.ic_cut, android.R.id.cut)
+				Motion.DOWN_LEFT, new ContextMenuAction(R.drawable.ic_cut, android.R.id.cut),
+				Motion.LEFT, new CustomAction(R.drawable.ic_go_to_start) {
+					@Override
+					public void execute(final @NonNull InputMethodView view) {
+						view.goToStartOfLine();
+					}
+				},
+				Motion.RIGHT, new CustomAction(R.drawable.ic_go_to_end) {
+					@Override
+					public void execute(final @NonNull InputMethodView view) {
+						view.goToEndOfLine();
+					}
+				}
 			)
 		),
 		// third row
@@ -142,7 +156,8 @@ import java.util.Map;
 			// third row, fourth column
 			Map.of(
 				Motion.NONE, new Action() {
-					private final @NonNull IconShower shower = new IconShower(R.drawable.ic_backspace);
+					private final @NonNull
+					IconShower shower = new IconShower(R.drawable.ic_backspace, false);
 
 					@Override
 					public void execute(final @NonNull InputMethodView view) {

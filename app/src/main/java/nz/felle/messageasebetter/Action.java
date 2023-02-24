@@ -8,11 +8,7 @@ abstract class Action {
 
 	abstract void execute(@NonNull InputMethodView view);
 
-	boolean executeLongPress(final @NonNull InputMethodView view) {
-		return false;
-	}
-
-	@Nullable	ActionShower show(final @NonNull InputMethodView view) {
+	@Nullable ActionShower show(final @NonNull InputMethodView view) {
 		return null;
 	}
 

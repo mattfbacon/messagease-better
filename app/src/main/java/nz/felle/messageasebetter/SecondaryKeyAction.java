@@ -18,7 +18,7 @@ public final class SecondaryKeyAction extends Action {
 
 	SecondaryKeyAction(final char key, final @DrawableRes int drawableId) {
 		this.key = key;
-		this.shower = new IconShower(drawableId);
+		this.shower = new IconShower(drawableId, this.secondary());
 	}
 
 	@Override

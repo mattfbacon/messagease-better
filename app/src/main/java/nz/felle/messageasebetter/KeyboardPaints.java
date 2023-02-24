@@ -12,6 +12,8 @@ public class KeyboardPaints {
 	static final float STROKE_WIDTH = 10.0f;
 	static final float RADIUS = 20.0f;
 
+	private final boolean nightMode;
+
 	private @ColorInt
 	int getColor(final @ColorRes int colorId, final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
 		return resources.getColor(colorId, theme);
@@ -23,7 +25,7 @@ public class KeyboardPaints {
 	private @NonNull
 	Paint makeButtonPaint(final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
 		final Paint paint = new Paint();
-		paint.setColor(getColor(R.color.keyboard_button_outline, resources, theme));
+		paint.setColor(getColor(nightMode ? R.color.keyboard_button_outline_dark : R.color.keyboard_button_outline_light, resources, theme));
 		paint.setStrokeWidth(STROKE_WIDTH);
 		paint.setStyle(Paint.Style.STROKE);
 		paint.setStrokeCap(Paint.Cap.ROUND);
@@ -37,7 +39,7 @@ public class KeyboardPaints {
 	Paint makeKeyTextPaint(final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
 		final Paint paint = new Paint();
 		paint.setTextAlign(Paint.Align.CENTER);
-		paint.setColor(getColor(R.color.keyboard_key_text_color, resources, theme));
+		paint.setColor(getColor(nightMode ? R.color.keyboard_key_text_color_dark : R.color.keyboard_key_text_color_light, resources, theme));
 		paint.setStyle(Paint.Style.FILL);
 		paint.setTextSize(60.0f);
 		return paint;
@@ -59,7 +61,7 @@ public class KeyboardPaints {
 	private @NonNull
 	Paint makeSecondaryKeyTextPaint(final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
 		final Paint paint = makeSmallKeyTextPaint(resources, theme);
-		paint.setColor(getColor(R.color.keyboard_key_text_color_secondary, resources, theme));
+		paint.setColor(getColor(nightMode ? R.color.keyboard_key_text_color_secondary_dark : R.color.keyboard_key_text_color_secondary_light, resources, theme));
 		return paint;
 	}
 
@@ -70,7 +72,9 @@ public class KeyboardPaints {
 	Paint linePaint;
 
 	KeyboardPaints(final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
-		backgroundColor = getColor(R.color.keyboard_background, resources, theme);
+		nightMode = resources.getConfiguration().isNightModeActive();
+
+		backgroundColor = getColor(nightMode ? R.color.keyboard_background_dark : R.color.keyboard_background_light, resources, theme);
 		buttonPaint = makeButtonPaint(resources, theme);
 		keyTextPaint = makeKeyTextPaint(resources, theme);
 		smallKeyTextPaint = makeSmallKeyTextPaint(resources, theme);

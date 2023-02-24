@@ -7,7 +7,7 @@ public abstract class CustomAction extends Action {
 	protected final @NonNull IconShower shower;
 
 	CustomAction(final @DrawableRes int drawableId) {
-		this.shower = new IconShower(drawableId);
+		this.shower = new IconShower(drawableId, this.secondary());
 	}
 
 	@NonNull

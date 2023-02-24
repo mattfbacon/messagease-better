@@ -9,11 +9,11 @@ import java.util.Objects;
 
 public final class SetCapsAction extends Action {
 	private static final @NonNull
-	IconShower upperIcon = new IconShower(R.drawable.ic_caps);
+	IconShower upperIcon = new IconShower(R.drawable.ic_caps, true);
 	private static final @NonNull
-	IconShower doubleUpperIcon = new IconShower(R.drawable.ic_caps_double);
+	IconShower doubleUpperIcon = new IconShower(R.drawable.ic_caps_double, true);
 	private static final @NonNull
-	IconShower lowerIcon = new IconShower(R.drawable.ic_lower);
+	IconShower lowerIcon = new IconShower(R.drawable.ic_lower, true);
 
 	private final boolean setTo;
 
