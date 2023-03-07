@@ -313,7 +313,20 @@ public final class InputMethodView extends View {
 			public void onResults(final Bundle resultsBundle) {
 				final ArrayList<String> results = resultsBundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 				if (results.size() > 0) {
-					final String text = results.get(0);
+					String text = results.get(0);
+					if (!text.isEmpty()) {
+						switch (view.getCaps()) {
+							case LOWER:
+								break;
+							case UPPER:
+								text = Character.toUpperCase(text.charAt(0)) + text.substring(1);
+								break;
+							case UPPER_PERMANENT:
+								text = text.toUpperCase();
+								break;
+						}
+						view.setCaps(view.getCaps().next());
+					}
 					view.conn.commitText(text, 1);
 				}
 			}
