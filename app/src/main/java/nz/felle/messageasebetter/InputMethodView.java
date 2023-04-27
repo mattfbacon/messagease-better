@@ -61,6 +61,17 @@ public final class InputMethodView extends View {
 		this.conn = conn;
 	}
 
+	private boolean neverUseCodepoints = false;
+	void updateQuirks(final String packageName) {
+		neverUseCodepoints = false;
+
+		Log.i("nz.felle.messageasebetter", "package name is " + packageName);
+		if (packageName.equals("com.sonelli.juicessh")) {
+			Log.w("nz.felle.messageasebetter", "applying quirks for JuiceSSH");
+			neverUseCodepoints = true;
+		}
+	}
+
 	public void performContextMenuAction(final int action) {
 		conn.performContextMenuAction(action);
 	}
@@ -263,13 +274,14 @@ public final class InputMethodView extends View {
 			return;
 		}
 
+		final Selection oldSelection = selection.clone();
 		if (amount < 0) {
-			if (!conn.deleteSurroundingTextInCodePoints(-amount, 0)) {
+			if (neverUseCodepoints || !conn.deleteSurroundingTextInCodePoints(-amount, 0)) {
 				// assume at this point that they probably don't have surrogates
 				conn.deleteSurroundingText(-amount, 0);
 			}
 		} else {
-			if (!conn.deleteSurroundingTextInCodePoints(0, amount)) {
+			if (neverUseCodepoints || !conn.deleteSurroundingTextInCodePoints(0, amount)) {
 				// ditto
 				conn.deleteSurroundingText(0, amount);
 			}

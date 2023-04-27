@@ -56,6 +56,8 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 
 		currentView.selection.start = selectionStart;
 		currentView.selection.end = selectionEnd;
+
+		currentView.updateQuirks(info.packageName);
 	}
 
 	@Override

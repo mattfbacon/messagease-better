@@ -10,9 +10,19 @@ public final class Selection {
 	public int end;
 
 	//region Record Boilerplate
-	Selection(final int start, final int end) {
+	public Selection(final int start, final int end) {
 		this.start = start;
 		this.end = end;
+	}
+
+	public Selection(final Selection other) {
+		this.start = other.start;
+		this.end = other.end;
+	}
+
+	@Override
+	public Selection clone() {
+		return new Selection(this);
 	}
 
 	@Override
