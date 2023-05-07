@@ -346,6 +346,7 @@ public final class InputMethodView extends View {
 			@Override
 			public void onError(final int error) {
 				Log.e("nz.felle.messageasebetter takeVoiceInput", "onError " + Integer.toString(error));
+				Toast.makeText(getContext(), String.format("voice input returned error %s", error), Toast.LENGTH_SHORT).show();
 			}
 
 			@Override
