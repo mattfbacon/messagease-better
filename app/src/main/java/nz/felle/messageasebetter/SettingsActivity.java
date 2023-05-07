@@ -1,11 +1,13 @@
 package nz.felle.messageasebetter;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceFragmentCompat;
 
 public final class SettingsActivity extends AppCompatActivity {
@@ -23,6 +25,7 @@ public final class SettingsActivity extends AppCompatActivity {
 		if (actionBar != null) {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+		ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
 	}
 
 	@Override
