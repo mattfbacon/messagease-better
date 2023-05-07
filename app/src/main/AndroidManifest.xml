@@ -37,5 +37,4 @@
 				android:resource="@xml/input_method" />
 		</service>
 	</application>
-
 </manifest>
