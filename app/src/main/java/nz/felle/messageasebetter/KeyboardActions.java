@@ -108,13 +108,13 @@ import java.util.Map;
 				Motion.LEFT, new CustomAction(R.drawable.ic_go_to_start) {
 					@Override
 					public void execute(final @NonNull InputMethodView view) {
-						view.goToStartOfLine();
+						view.doWord(Direction.BEFORE, false);
 					}
 				},
 				Motion.RIGHT, new CustomAction(R.drawable.ic_go_to_end) {
 					@Override
 					public void execute(final @NonNull InputMethodView view) {
-						view.goToEndOfLine();
+						view.doWord(Direction.AFTER, false);
 					}
 				}
 			)
@@ -174,13 +174,13 @@ import java.util.Map;
 				Motion.UP_LEFT, new Action() {
 					@Override
 					void execute(@NonNull InputMethodView view) {
-						view.delete(-10);
+						view.doWord(Direction.BEFORE, true);
 					}
 				},
 				Motion.UP_RIGHT, new Action() {
 					@Override
 					void execute(@NonNull InputMethodView view) {
-						view.delete(10);
+						view.doWord(Direction.AFTER, true);
 					}
 				},
 				Motion.RIGHT, new Action() {

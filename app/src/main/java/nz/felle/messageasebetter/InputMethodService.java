@@ -58,6 +58,8 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		currentView.selection.end = selectionEnd;
 
 		currentView.updateQuirks(info.packageName);
+
+		currentView.setLocale(info.hintLocales != null ? info.hintLocales.get(0) : null);
 	}
 
 	@Override

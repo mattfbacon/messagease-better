@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.icu.text.BreakIterator;
+import android.icu.util.ULocale;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -23,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -74,6 +78,13 @@ public final class InputMethodView extends View {
 		}
 	}
 
+	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
+	private @NonNull ULocale locale = defaultLocale;
+
+	void setLocale(final @Nullable Locale setTo) {
+		this.locale = setTo != null ? ULocale.forLocale(setTo) : defaultLocale;
+	}
+
 	public void performContextMenuAction(final int action) {
 		conn.performContextMenuAction(action);
 	}
@@ -87,70 +98,95 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	public void goToStartOfLine() {
-		goToStartOfLine(false);
-	}
+	public void doWord(final Direction direction, final boolean delete) {
+		final int MULTIPLIER = 10;
+		int chunk = 100;
 
-	public void goToStartOfLine(final boolean keepOtherEnd) {
-		final int CHUNK = 100;
-		int position = selection.start;
-		final int oldEnd = selection.end;
-		while (true) {
-			final CharSequence chs = conn.getTextBeforeCursor(CHUNK, 0);
-			if (chs == null) {
-				return;
-			}
-			final int len = chs.length();
-			// start at 1 to allow going to start of previous line if we are at start of current line
-			if (len >= 1) {
-				for (int i = 1; i < len; ++i) {
-					if (chs.charAt(len - i - 1) == '\n') {
-						position -= i;
-						conn.setSelection(position, keepOtherEnd ? oldEnd : position);
-						return;
-					}
+		if (selection.start != selection.end) {
+			if (delete) {
+				deleteSelection();
+			} else {
+				int pos = -1; // Java sucks.
+
+				switch (direction) {
+					case BEFORE:
+						pos = selection.start;
+						break;
+					case AFTER:
+						pos = selection.end;
+						break;
 				}
+
+				assert pos != -1;
+
+				conn.setSelection(pos, pos);
 			}
-			if (len < CHUNK) {
-				conn.setSelection(0, keepOtherEnd ? oldEnd : 0);
-				return;
-			}
-			position -= CHUNK;
-			conn.setSelection(position, keepOtherEnd ? oldEnd : position);
+			return;
 		}
-	}
 
-	public void goToEndOfLine() {
-		goToEndOfLine(false);
-	}
+		// `start == end`.
+		int pos = selection.start;
+		final int initialPos = pos;
 
-	public void goToEndOfLine(final boolean keepOtherEnd) {
-		final int CHUNK = 100;
-		int position = selection.end;
-		final int oldStart = selection.start;
 		while (true) {
-			final CharSequence chs = conn.getTextAfterCursor(CHUNK, 0);
-			if (chs == null) {
-				return;
+			CharSequence chars = null; // Java sucks.
+
+			switch (direction) {
+				case BEFORE:
+					chars = conn.getTextBeforeCursor(chunk, 0);
+					break;
+				case AFTER:
+					chars = conn.getTextAfterCursor(chunk, 0);
+					break;
 			}
-			final int len = chs.length();
-			// start at 1 to allow going to end of next line if we are at end of current line
-			if (len >= 1) {
-				for (int i = 1; i < len; ++i) {
-					if (chs.charAt(i) == '\n') {
-						position += i;
-						conn.setSelection(keepOtherEnd ? oldStart : position, position);
-						return;
+
+			assert chars != null;
+
+			final int len = chars.length();
+			if (len == 0) {
+				break;
+			}
+
+			final BreakIterator finder = BreakIterator.getWordInstance(locale);
+			finder.setText(chars);
+
+			boolean boundaryFound = false;
+
+			switch (direction) {
+				case BEFORE: {
+					finder.last();
+					finder.previous();
+					final int boundary = finder.previous();
+					pos -= len;
+					if (boundary != BreakIterator.DONE) {
+						pos += boundary;
+						boundaryFound = true;
 					}
-				}
+				} break;
+				case AFTER: {
+					finder.first();
+					finder.next();
+					final int boundary = finder.next();
+					if (boundary == BreakIterator.DONE) {
+						pos += len;
+					} else {
+						pos += boundary;
+						boundaryFound = true;
+					}
+				} break;
 			}
-			if (len < CHUNK) {
-				position += len;
-				conn.setSelection(keepOtherEnd ? oldStart : position, position);
-				return;
+
+			conn.setSelection(pos, pos);
+
+			if (boundaryFound) {
+				break;
 			}
-			position += CHUNK;
-			conn.setSelection(keepOtherEnd ? oldStart : position, position);
+
+			chunk *= MULTIPLIER;
+		}
+
+		if (delete) {
+			conn.deleteSurroundingText(Integer.max(pos - initialPos, 0), Integer.max(initialPos - pos, 0));
 		}
 	}
 
