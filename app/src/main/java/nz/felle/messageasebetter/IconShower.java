@@ -15,10 +15,8 @@ import android.util.Log;
 import java.util.Objects;
 
 public final class IconShower extends ActionShower {
-	private @Nullable
-	Drawable drawable = null;
-	private final @DrawableRes
-	int drawableId;
+	private @Nullable Drawable drawable = null;
+	private @DrawableRes int drawableId;
 	private final boolean secondary;
 
 	private @ColorInt int lightColor = -1;
@@ -33,6 +31,14 @@ public final class IconShower extends ActionShower {
 		this.drawable = drawable;
 		this.drawableId = 0;
 		this.secondary = secondary;
+	}
+
+	public void updateDrawable(final @DrawableRes int drawableId, final @NonNull InputMethodView view) {
+		if (drawableId != this.drawableId) {
+			this.drawable = null;
+			this.drawableId = drawableId;
+			this.initialize(view);
+		}
 	}
 
 	//region Boilerplate
@@ -59,8 +65,6 @@ public final class IconShower extends ActionShower {
 
 	@Override
 	public void show(final @NonNull Canvas canvas, final float centerX, final float centerY, final @NonNull Paint paint, final boolean dark) {
-		assert drawable != null;
-
 		drawable.setTint(dark ? darkColor : lightColor);
 
 		final int size = Math.round(paint.getTextSize());
@@ -73,14 +77,16 @@ public final class IconShower extends ActionShower {
 
 	@Override
 	public void initialize(final @NonNull InputMethodView view) {
-		if (drawable != null) {
-			return;
+		if (lightColor == -1) {
+			lightColor = view.getContext().getColor(secondary ? R.color.keyboard_key_text_color_secondary_light : R.color.keyboard_key_text_color_light);
 		}
 
-		drawable = Objects.requireNonNull(ResourcesCompat.getDrawable(view.getResources(), drawableId, view.getContext().getTheme()), "could not get drawable");
+		if (darkColor == -1) {
+			darkColor = view.getContext().getColor(secondary ? R.color.keyboard_key_text_color_secondary_dark : R.color.keyboard_key_text_color_dark);
+		}
 
-		final Context context = view.getContext();
-		lightColor = context.getColor(secondary ? R.color.keyboard_key_text_color_secondary_light : R.color.keyboard_key_text_color_light);
-		darkColor = context.getColor(secondary ? R.color.keyboard_key_text_color_secondary_dark : R.color.keyboard_key_text_color_dark);
+		if (drawable == null) {
+			drawable = Objects.requireNonNull(ResourcesCompat.getDrawable(view.getResources(), drawableId, view.getContext().getTheme()), "could not get drawable");
+		}
 	}
 }

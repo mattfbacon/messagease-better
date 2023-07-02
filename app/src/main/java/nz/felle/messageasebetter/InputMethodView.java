@@ -22,6 +22,7 @@ import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -236,40 +237,39 @@ public final class InputMethodView extends View {
 	}
 
 	private @NonNull
-	final TextShower _actShower = new TextShower("Enter");
+	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
 
 	private void updateActShower() {
-		String actString = "Enter";
+		@DrawableRes int icon = R.drawable.ic_keyboard_return;
 
 		switch (_actAction) {
 			case EditorInfo.IME_ACTION_DONE:
-				actString = "Done";
+				icon = R.drawable.ic_done;
 				break;
 			case EditorInfo.IME_ACTION_GO:
-				actString = "Go";
+				icon = R.drawable.ic_login;
 				break;
 			case EditorInfo.IME_ACTION_NEXT:
-				actString = "Next";
+				icon = R.drawable.ic_navigate_next;
 				break;
 			case EditorInfo.IME_ACTION_PREVIOUS:
-				actString = "Prev";
+				icon = R.drawable.ic_navigate_before;
 				break;
 			case EditorInfo.IME_ACTION_SEARCH:
-				actString = "Search";
+				icon = R.drawable.ic_search;
 				break;
 			case EditorInfo.IME_ACTION_SEND:
-				actString = "Send";
+				icon = R.drawable.ic_send;
 				break;
 			case EditorInfo.IME_ACTION_NONE:
-				actString = "";
+				icon = R.drawable.empty;
 				break;
 		}
 
-		_actShower.text = actString;
+		_actShower.updateDrawable(icon, this);
 	}
 
-	@NonNull
-	ActionShower getActShower() {
+	@NonNull ActionShower getActShower() {
 		return _actShower;
 	}
 
