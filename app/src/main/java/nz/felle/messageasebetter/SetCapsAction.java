@@ -47,13 +47,8 @@ public final class SetCapsAction extends Action {
 	public void execute(final @NonNull InputMethodView view) {
 		if (setTo) {
 			switch (view.getCaps()) {
-				case LOWER:
-				case UPPER_PERMANENT:
-					view.setCaps(CapsMode.UPPER);
-					break;
-				case UPPER:
-					view.setCaps(CapsMode.UPPER_PERMANENT);
-					break;
+				case LOWER, UPPER_PERMANENT -> view.setCaps(CapsMode.UPPER);
+				case UPPER -> view.setCaps(CapsMode.UPPER_PERMANENT);
 			}
 		} else {
 			view.setCaps(CapsMode.LOWER);

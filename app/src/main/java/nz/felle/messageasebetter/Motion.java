@@ -16,34 +16,18 @@ public enum Motion {
 	DOWN_LEFT,;
 
 	@NonNull PointF offset(final float centerX, final float centerY, final float offsetX, final float offsetY) {
-		final @NonNull PointF ret = new PointF(centerX, centerY);
+		final float x = switch (this) {
+			case NONE, UP, DOWN -> centerX;
+			case UP_LEFT, LEFT, DOWN_LEFT -> centerX - offsetX;
+			case UP_RIGHT, RIGHT, DOWN_RIGHT -> centerX + offsetX;
+		};
 
-		switch (this) {
-			case UP_LEFT:
-			case LEFT:
-			case DOWN_LEFT:
-				ret.x = centerX - offsetX;
-				break;
-			case UP_RIGHT:
-			case RIGHT:
-			case DOWN_RIGHT:
-				ret.x = centerX + offsetX;
-				break;
-		}
+		final float y = switch (this) {
+			case NONE, LEFT, RIGHT -> centerY;
+			case UP_LEFT, UP, UP_RIGHT -> centerY - offsetY;
+			case DOWN_LEFT, DOWN, DOWN_RIGHT -> centerY + offsetY;
+		};
 
-		switch (this) {
-			case UP_LEFT:
-			case UP:
-			case UP_RIGHT:
-				ret.y = centerY - offsetY;
-				break;
-			case DOWN_LEFT:
-			case DOWN:
-			case DOWN_RIGHT:
-				ret.y = centerY + offsetY;
-				break;
-		}
-
-		return ret;
+		return new PointF(x, y);
 	}
 }

@@ -71,6 +71,7 @@ public final class InputMethodView extends View {
 	InputMethodService service = null;
 
 	private boolean neverUseCodepoints = false;
+
 	void updateQuirks(final String packageName) {
 		neverUseCodepoints = false;
 
@@ -109,18 +110,10 @@ public final class InputMethodView extends View {
 			if (delete) {
 				deleteSelection();
 			} else {
-				int pos = -1; // Java sucks.
-
-				switch (direction) {
-					case BEFORE:
-						pos = selection.start;
-						break;
-					case AFTER:
-						pos = selection.end;
-						break;
-				}
-
-				assert pos != -1;
+				int pos = switch (direction) {
+					case BEFORE -> selection.start;
+					case AFTER -> selection.end;
+				};
 
 				conn.setSelection(pos, pos);
 			}
@@ -132,18 +125,10 @@ public final class InputMethodView extends View {
 		final int initialPos = pos;
 
 		while (true) {
-			CharSequence chars = null; // Java sucks.
-
-			switch (direction) {
-				case BEFORE:
-					chars = conn.getTextBeforeCursor(chunk, 0);
-					break;
-				case AFTER:
-					chars = conn.getTextAfterCursor(chunk, 0);
-					break;
-			}
-
-			assert chars != null;
+			CharSequence chars = switch (direction) {
+				case BEFORE -> conn.getTextBeforeCursor(chunk, 0);
+				case AFTER -> conn.getTextAfterCursor(chunk, 0);
+			};
 
 			final int len = chars.length();
 			if (len == 0) {
@@ -156,7 +141,7 @@ public final class InputMethodView extends View {
 			boolean boundaryFound = false;
 
 			switch (direction) {
-				case BEFORE: {
+				case BEFORE -> {
 					finder.last();
 					finder.previous();
 					final int boundary = finder.previous();
@@ -165,8 +150,8 @@ public final class InputMethodView extends View {
 						pos += boundary;
 						boundaryFound = true;
 					}
-				} break;
-				case AFTER: {
+				}
+				case AFTER -> {
 					finder.first();
 					finder.next();
 					final int boundary = finder.next();
@@ -176,7 +161,7 @@ public final class InputMethodView extends View {
 						pos += boundary;
 						boundaryFound = true;
 					}
-				} break;
+				}
 			}
 
 			conn.setSelection(pos, pos);
@@ -240,36 +225,22 @@ public final class InputMethodView extends View {
 	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
 
 	private void updateActShower() {
-		@DrawableRes int icon = R.drawable.ic_keyboard_return;
-
-		switch (_actAction) {
-			case EditorInfo.IME_ACTION_DONE:
-				icon = R.drawable.ic_done;
-				break;
-			case EditorInfo.IME_ACTION_GO:
-				icon = R.drawable.ic_login;
-				break;
-			case EditorInfo.IME_ACTION_NEXT:
-				icon = R.drawable.ic_navigate_next;
-				break;
-			case EditorInfo.IME_ACTION_PREVIOUS:
-				icon = R.drawable.ic_navigate_before;
-				break;
-			case EditorInfo.IME_ACTION_SEARCH:
-				icon = R.drawable.ic_search;
-				break;
-			case EditorInfo.IME_ACTION_SEND:
-				icon = R.drawable.ic_send;
-				break;
-			case EditorInfo.IME_ACTION_NONE:
-				icon = R.drawable.empty;
-				break;
-		}
+		final @DrawableRes int icon = switch (_actAction) {
+			case EditorInfo.IME_ACTION_DONE -> R.drawable.ic_done;
+			case EditorInfo.IME_ACTION_GO -> R.drawable.ic_login;
+			case EditorInfo.IME_ACTION_NEXT -> R.drawable.ic_navigate_next;
+			case EditorInfo.IME_ACTION_PREVIOUS -> R.drawable.ic_navigate_before;
+			case EditorInfo.IME_ACTION_SEARCH -> R.drawable.ic_search;
+			case EditorInfo.IME_ACTION_SEND -> R.drawable.ic_send;
+			case EditorInfo.IME_ACTION_NONE -> R.drawable.empty;
+			default -> R.drawable.ic_keyboard_return;
+		};
 
 		_actShower.updateDrawable(icon, this);
 	}
 
-	@NonNull ActionShower getActShower() {
+	@NonNull
+	ActionShower getActShower() {
 		return _actShower;
 	}
 
@@ -292,10 +263,6 @@ public final class InputMethodView extends View {
 		conn.commitText(Character.toString(ch), 1);
 	}
 
-	void setSelection(int start, int end) {
-		conn.setSelection(start, end);
-	}
-
 	private boolean deleteSelection() {
 		if (!selection.isNonCursor()) {
 			return false;
@@ -314,7 +281,6 @@ public final class InputMethodView extends View {
 			return;
 		}
 
-		final Selection oldSelection = selection.clone();
 		if (amount < 0) {
 			if (neverUseCodepoints || !conn.deleteSurroundingTextInCodePoints(-amount, 0)) {
 				// assume at this point that they probably don't have surrogates
@@ -364,51 +330,60 @@ public final class InputMethodView extends View {
 			@Override
 			public void onResults(final Bundle resultsBundle) {
 				final ArrayList<String> results = resultsBundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-				if (results.size() > 0) {
-					String text = results.get(0);
-					if (!text.isEmpty()) {
-						switch (view.getCaps()) {
-							case LOWER:
-								break;
-							case UPPER:
-								text = Character.toUpperCase(text.charAt(0)) + text.substring(1);
-								break;
-							case UPPER_PERMANENT:
-								text = text.toUpperCase();
-								break;
-						}
-						view.setCaps(view.getCaps().next());
-					}
-					view.conn.commitText(text, 1);
+				if (results.size() == 0) {
+					return;
 				}
+
+				final @NonNull String rawText = results.get(0);
+
+				if (rawText.isEmpty()) {
+					return;
+				}
+
+				final @NonNull String text = switch (view.getCaps()) {
+					case LOWER -> rawText;
+					case UPPER -> Character.toUpperCase(rawText.charAt(0)) + rawText.substring(1);
+					case UPPER_PERMANENT -> rawText.toUpperCase();
+				};
+
+				view.setCaps(view.getCaps().next());
+
+				view.conn.commitText(text, 1);
 			}
 
 			@Override
 			public void onError(final int error) {
-				Log.e("nz.felle.messageasebetter takeVoiceInput", "onError " + Integer.toString(error));
+				Log.e("nz.felle.messageasebetter takeVoiceInput", "onError " + error);
 				Toast.makeText(getContext(), String.format("voice input returned error %s", error), Toast.LENGTH_SHORT).show();
 			}
 
 			@Override
-			public void onEvent(final int event, final Bundle params) {}
+			public void onEvent(final int event, final Bundle params) {
+			}
 
 			@Override
-			public void onReadyForSpeech(final Bundle params) {}
+			public void onReadyForSpeech(final Bundle params) {
+			}
 
 			@Override
-			public void onPartialResults(final Bundle params) {}
+			public void onPartialResults(final Bundle params) {
+			}
 
 			@Override
-			public void onBufferReceived(final byte[] _data) {}
+			public void onBufferReceived(final byte[] _data) {
+			}
 
 			@Override
-			public void onEndOfSpeech() {}
+			public void onEndOfSpeech() {
+			}
 
 			@Override
-			public void onBeginningOfSpeech() {}
+			public void onBeginningOfSpeech() {
+			}
 
 			@Override
-			public void onRmsChanged(final float _dbms) {}
+			public void onRmsChanged(final float _dbms) {
+			}
 		});
 
 		recognizer.startListening(intent);
