@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class InputMethodView extends View {
+	static float HEIGHT = 300f;
+
 	//region Constructor Boilerplate
 	public InputMethodView(final @Nullable Context context) {
 		super(context);
@@ -380,7 +382,7 @@ public final class InputMethodView extends View {
 		final @Nullable FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) getLayoutParams();
 		if (params != null) {
 			params.gravity = Gravity.BOTTOM;
-			params.height = Math.round(getResources().getDisplayMetrics().density * 360.0f);
+			params.height = Math.round(getResources().getDisplayMetrics().density * HEIGHT);
 		}
 		setLayoutParams(params);
 	}
