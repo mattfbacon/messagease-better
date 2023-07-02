@@ -19,6 +19,10 @@ public final class Line {
 		this.endY = endY;
 	}
 
+	Line(final float x, final float y) {
+		this(x, y, x, y);
+	}
+
 	@Override
 	public boolean equals(final @Nullable Object obj) {
 		if (obj == this) return true;

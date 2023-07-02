@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -244,14 +245,71 @@ public final class InputMethodView extends View {
 		return _actShower;
 	}
 
-	private @Nullable
-	Line line = null;
+	static final class TrackedTouch {
+		@NonNull
+		private final Line line;
+		@NonNull
+		private final Repeater repeater;
+
+		TrackedTouch(@NonNull Line line, @NonNull Repeater repeater) {
+			this.line = line;
+			this.repeater = repeater;
+		}
+
+		TrackedTouch(final @NonNull InputMethodView view, final int pointerId, final float initialX, final float initialY) {
+			this(new Line(initialX, initialY), new Repeater(view, pointerId));
+			this.repeater.start();
+		}
+
+		void updateEnd(final float endX, final float endY) {
+			this.line.endX = endX;
+			this.line.endY = endY;
+		}
+
+		boolean finish() {
+			final boolean hasExecuted = this.repeater.hasExecuted();
+			this.repeater.stop();
+			return !hasExecuted;
+		}
+
+		@NonNull
+		public Line line() {
+			return line;
+		}
+
+		@NonNull
+		public Repeater repeater() {
+			return repeater;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) return true;
+			if (obj == null || obj.getClass() != this.getClass()) return false;
+			var that = (TrackedTouch) obj;
+			return Objects.equals(this.line, that.line) &&
+				Objects.equals(this.repeater, that.repeater);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(line, repeater);
+		}
+
+		@Override
+		public String toString() {
+			return "TrackedTouch[" +
+				"line=" + line + ", " +
+				"repeater=" + repeater + ']';
+		}
+
+	}
+
+	private final @NonNull
+	HashMap<Integer, TrackedTouch> trackedTouches = new HashMap<>();
 
 	final @NonNull
 	Selection selection = new Selection(0, 0);
-
-	private final @NonNull
-	Repeater repeater = new Repeater(this);
 
 	private void complainAboutMissingAction(final int row, final int col, final @NonNull Motion motion) {
 		Toast.makeText(getContext(), String.format("no action for row %s, col %s, motion %s", row + 1, col + 1, motion), Toast.LENGTH_SHORT).show();
@@ -448,10 +506,13 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	boolean processLine() {
+	boolean processLine(final int pointerId) {
+		return processLine(Objects.requireNonNull(this.trackedTouches.get(pointerId), "invalid pointer id").line);
+	}
+
+	boolean processLine(final @NonNull Line line) {
 		final float motionThresholdX = this.buttonWidth() / 4;
 		final float motionThresholdY = this.buttonHeight() / 4;
-		final @NonNull Line line = Objects.requireNonNull(this.line);
 		final @NonNull Motion motion = line.asMotion(motionThresholdX, motionThresholdY);
 
 		final int actionRow = (int) Math.floor((line.startY - this.getY()) / this.buttonHeight());
@@ -487,30 +548,49 @@ public final class InputMethodView extends View {
 			return super.onTouchEvent(null);
 		}
 
-		switch (event.getActionMasked()) {
-			case MotionEvent.ACTION_DOWN:
-				line = new Line(event.getX(), event.getY(), event.getX(), event.getY());
-				repeater.start();
-				postInvalidate();
-				return true;
-			case MotionEvent.ACTION_MOVE:
-				assert line != null;
-				line.endX = event.getX();
-				line.endY = event.getY();
-				postInvalidate();
-				return true;
-			case MotionEvent.ACTION_UP:
-				assert line != null;
-				final boolean hasExecuted = repeater.hasExecuted();
-				repeater.stop();
-				if (!hasExecuted) {
-					processLine();
+		boolean processed = false;
+
+		for (int i = 0; i < event.getPointerCount(); ++i) {
+			boolean released = false;
+
+			switch (event.getActionMasked()) {
+				case MotionEvent.ACTION_UP:
+					assert event.getPointerCount() == 1;
+					released = true;
+					break;
+				case MotionEvent.ACTION_POINTER_UP:
+					released = event.getActionIndex() == i;
+					break;
+				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_POINTER_DOWN:
+				case MotionEvent.ACTION_MOVE:
+					break;
+				default:
+					continue;
+			}
+
+			final int pointerId = event.getPointerId(i);
+			final float x = event.getX(i);
+			final float y = event.getY(i);
+			final @NonNull TrackedTouch trackedTouch = trackedTouches.computeIfAbsent(pointerId, (_id) -> new TrackedTouch(this, pointerId, x, y));
+
+			processed = true;
+			trackedTouch.updateEnd(x, y);
+
+			if (released) {
+				trackedTouches.remove(pointerId);
+
+				if (trackedTouch.finish()) {
+					processLine(trackedTouch.line);
 				}
-				line = null;
-				postInvalidate();
-				return true;
-			default:
-				return false;
+			}
+		}
+
+		if (processed) {
+			postInvalidate();
+			return true;
+		} else {
+			return super.onTouchEvent(event);
 		}
 	}
 
@@ -547,9 +627,11 @@ public final class InputMethodView extends View {
 
 		drawButton(canvas, threeWidth, lastRowY, buttonWidth, buttonHeight, _actShower);
 
-		final @Nullable Line line = this.line;
-		if (line != null && line.length() > 1.0f) {
-			canvas.drawLine(line.startX, line.startY, line.endX, line.endY, paints.linePaint);
-		}
+		this.trackedTouches.forEach((_id, trackedTouch) -> {
+			final @NonNull Line line = trackedTouch.line;
+			if (line.length() > 1.0f) {
+				canvas.drawLine(line.startX, line.startY, line.endX, line.endY, paints.linePaint);
+			}
+		});
 	}
 }

@@ -8,9 +8,11 @@ import androidx.annotation.NonNull;
 public final class Repeater implements Runnable {
 	private final @NonNull
 	InputMethodView view;
+	private final int touchId;
 
-	public Repeater(@NonNull InputMethodView view) {
+	public Repeater(final @NonNull InputMethodView view, final int touchId) {
 		this.view = view;
+		this.touchId = touchId;
 	}
 
 	private static final float MIN_INTERVAL = 50.0f;
@@ -37,7 +39,7 @@ public final class Repeater implements Runnable {
 	public void run() {
 		hasExecuted = true;
 
-		view.processLine();
+		view.processLine(touchId);
 		handler.postDelayed(this, Math.round(interval));
 		shortenInterval();
 	}
