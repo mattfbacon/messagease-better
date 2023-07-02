@@ -67,6 +67,8 @@ public final class InputMethodView extends View {
 		this.conn = conn;
 	}
 
+	InputMethodService service = null;
+
 	private boolean neverUseCodepoints = false;
 	void updateQuirks(final String packageName) {
 		neverUseCodepoints = false;

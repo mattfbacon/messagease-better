@@ -14,6 +14,7 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 	public View onCreateInputView() {
 		InputMethodView view = (InputMethodView)getLayoutInflater().inflate(R.layout.keyboard, null);
 		view.updateInputConnection(getCurrentInputConnection());
+		view.service = this;
 		currentView = view;
 		return view;
 	}

@@ -194,6 +194,12 @@ import java.util.Map;
 					void execute(final @NonNull InputMethodView view) {
 						view.takeVoiceInput();
 					}
+				},
+				Motion.DOWN, new CustomAction(R.drawable.ic_bottom_panel_close) {
+					@Override
+					void execute(final @NonNull InputMethodView view) {
+						view.service.requestHideSelf(0);
+					}
 				}
 			)
 		),
