@@ -17,6 +17,10 @@ The app will ask for audio permissions when it starts up. This is just for voice
 
 Feel free to open issues, PRs, etc. While this app is mainly for myself, I'm certainly willing to accept improvements and bug fixes.
 
+## Credits
+
+The app icon is the App Drawer icon from the Delta icon theme. <https://github.com/Delta-Icons/android>
+
 ## License
 
 AGPL-3.0-or-later
