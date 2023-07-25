@@ -34,6 +34,21 @@ import java.util.Objects;
 
 public final class InputMethodView extends View {
 	static float HEIGHT = 300f;
+	final @NonNull Selection selection = new Selection(0, 0);
+	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
+	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
+	private @NonNull
+	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
+	private final @NonNull HashMap<Integer, TrackedTouch> trackedTouches = new HashMap<>();
+	// Not nullable in practice, but late-initialized in InputMethodService::onCreateInputView.
+	// Annotation intentionally omitted.
+	InputMethodService service = null;
+	private @Nullable InputConnection conn = null;
+	private boolean neverUseCodepoints = false;
+	private @NonNull ULocale locale = defaultLocale;
+	private boolean _numMode = false;
+	private @NonNull CapsMode _caps = CapsMode.LOWER;
+	private int _actAction = EditorInfo.IME_ACTION_UNSPECIFIED;
 
 	//region Constructor Boilerplate
 	public InputMethodView(final @Nullable Context context) {
@@ -44,16 +59,21 @@ public final class InputMethodView extends View {
 		super(context, attrs);
 	}
 
-	public InputMethodView(final @Nullable Context context, final @Nullable AttributeSet attrs, final int defStyleAttr) {
+	public InputMethodView(
+		final @Nullable Context context, final @Nullable AttributeSet attrs, final int defStyleAttr
+	) {
 		super(context, attrs, defStyleAttr);
 	}
 
-	public InputMethodView(final @Nullable Context context, final @Nullable AttributeSet attrs, final int defStyleAttr, final int defStyleRes) {
+	public InputMethodView(
+		final @Nullable Context context,
+		final @Nullable AttributeSet attrs,
+		final int defStyleAttr,
+		final int defStyleRes
+	) {
 		super(context, attrs, defStyleAttr, defStyleRes);
 	}
 	//endregion
-
-	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
 
 	private float buttonWidth() {
 		return this.getWidth() / 4.0f;
@@ -63,17 +83,9 @@ public final class InputMethodView extends View {
 		return this.getHeight() / 4.0f;
 	}
 
-	private @Nullable InputConnection conn = null;
-
 	public void updateInputConnection(@NonNull InputConnection conn) {
 		this.conn = conn;
 	}
-
-	// Not nullable in practice, but late-initialized in InputMethodService::onCreateInputView.
-	// Annotation intentionally omitted.
-	InputMethodService service = null;
-
-	private boolean neverUseCodepoints = false;
 
 	void updateQuirks(final @NonNull String packageName) {
 		neverUseCodepoints = false;
@@ -84,9 +96,6 @@ public final class InputMethodView extends View {
 			neverUseCodepoints = true;
 		}
 	}
-
-	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
-	private @NonNull ULocale locale = defaultLocale;
 
 	void setLocale(final @Nullable Locale setTo) {
 		this.locale = setTo != null ? ULocale.forLocale(setTo) : defaultLocale;
@@ -181,8 +190,6 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	private boolean _numMode = false;
-
 	boolean getNumMode() {
 		return _numMode;
 	}
@@ -194,8 +201,6 @@ public final class InputMethodView extends View {
 			this.postInvalidate();
 		}
 	}
-
-	private @NonNull CapsMode _caps = CapsMode.LOWER;
 
 	CapsMode getCaps() {
 		return _caps;
@@ -209,8 +214,6 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	private int _actAction = EditorInfo.IME_ACTION_UNSPECIFIED;
-
 	int getActAction() {
 		return _actAction;
 	}
@@ -223,9 +226,6 @@ public final class InputMethodView extends View {
 			this.postInvalidate();
 		}
 	}
-
-	private @NonNull
-	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
 
 	private void updateActShower() {
 		final @DrawableRes int icon = switch (_actAction) {
@@ -247,73 +247,9 @@ public final class InputMethodView extends View {
 		return _actShower;
 	}
 
-	static final class TrackedTouch {
-		@NonNull
-		private final Line line;
-		@NonNull
-		private final Repeater repeater;
-
-		TrackedTouch(final @NonNull Line line, final @NonNull Repeater repeater) {
-			this.line = line;
-			this.repeater = repeater;
-		}
-
-		TrackedTouch(final @NonNull InputMethodView view, final int pointerId, final float initialX, final float initialY) {
-			this(new Line(initialX, initialY), new Repeater(view, pointerId));
-			this.repeater.start();
-		}
-
-		void updateEnd(final float endX, final float endY) {
-			this.line.endX = endX;
-			this.line.endY = endY;
-		}
-
-		boolean finish() {
-			final boolean hasExecuted = this.repeater.hasExecuted();
-			this.repeater.stop();
-			return !hasExecuted;
-		}
-
-		@NonNull
-		public Line line() {
-			return line;
-		}
-
-		@NonNull
-		public Repeater repeater() {
-			return repeater;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) return true;
-			if (obj == null || obj.getClass() != this.getClass()) return false;
-			var that = (TrackedTouch) obj;
-			return Objects.equals(this.line, that.line) &&
-				Objects.equals(this.repeater, that.repeater);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(line, repeater);
-		}
-
-		@Override
-		public @NonNull String toString() {
-			return "TrackedTouch[" +
-				"line=" + line + ", " +
-				"repeater=" + repeater + ']';
-		}
-
-	}
-
-	private final @NonNull
-	HashMap<Integer, TrackedTouch> trackedTouches = new HashMap<>();
-
-	final @NonNull
-	Selection selection = new Selection(0, 0);
-
-	private void complainAboutMissingAction(final int row, final int col, final @NonNull Motion motion) {
+	private void complainAboutMissingAction(
+		final int row, final int col, final @NonNull Motion motion
+	) {
 		Toast.makeText(getContext(), String.format("no action for row %s, col %s, motion %s", row + 1, col + 1, motion), Toast.LENGTH_SHORT).show();
 	}
 
@@ -460,20 +396,40 @@ public final class InputMethodView extends View {
 		setLayoutParams(params);
 	}
 
-	private void drawButton(final @NonNull Canvas canvas, final float x, final float y, final float width, final float height) {
+	private void drawButton(
+		final @NonNull Canvas canvas,
+		final float x,
+		final float y,
+		final float width,
+		final float height
+	) {
 		final float strokeWidth = KeyboardPaints.STROKE_WIDTH;
 		final float radius = KeyboardPaints.RADIUS;
 		canvas.drawRoundRect(x + strokeWidth, y + strokeWidth, x + width - strokeWidth, y + height - strokeWidth, radius, radius, paints.buttonPaint);
 	}
 
-	private void drawButton(final @NonNull Canvas canvas, final float x, final float y, final float width, final float height, @Nullable ActionShower key) {
+	private void drawButton(
+		final @NonNull Canvas canvas,
+		final float x,
+		final float y,
+		final float width,
+		final float height,
+		@Nullable ActionShower key
+	) {
 		drawButton(canvas, x, y, width, height);
 		if (key != null) {
 			key.show(canvas, x + (width / 2), y + (height / 2), paints.keyTextPaint, isDark());
 		}
 	}
 
-	private void drawButton(final @NonNull Canvas canvas, final float x, final float y, final float width, final float height, @NonNull Map<Motion, Action> keys) {
+	private void drawButton(
+		final @NonNull Canvas canvas,
+		final float x,
+		final float y,
+		final float width,
+		final float height,
+		@NonNull Map<Motion, Action> keys
+	) {
 		final @Nullable Action noneAction = keys.get(Motion.NONE);
 		@Nullable ActionShower noneShower = null;
 		if (noneAction != null) {
@@ -531,10 +487,7 @@ public final class InputMethodView extends View {
 			}
 		}
 
-		final @Nullable Action action = KeyboardActions.ACTIONS
-			.get(actionRow)
-			.get(actionCol)
-			.get(motion);
+		final @Nullable Action action = KeyboardActions.ACTIONS.get(actionRow).get(actionCol).get(motion);
 		if (action != null) {
 			action.execute(this);
 			return true;
@@ -635,5 +588,71 @@ public final class InputMethodView extends View {
 				canvas.drawLine(line.startX, line.startY, line.endX, line.endY, paints.linePaint);
 			}
 		});
+	}
+
+	static final class TrackedTouch {
+		@NonNull
+		private final Line line;
+		@NonNull
+		private final Repeater repeater;
+
+		TrackedTouch(final @NonNull Line line, final @NonNull Repeater repeater) {
+			this.line = line;
+			this.repeater = repeater;
+		}
+
+		TrackedTouch(
+			final @NonNull InputMethodView view,
+			final int pointerId,
+			final float initialX,
+			final float initialY
+		) {
+			this(new Line(initialX, initialY), new Repeater(view, pointerId));
+			this.repeater.start();
+		}
+
+		void updateEnd(final float endX, final float endY) {
+			this.line.endX = endX;
+			this.line.endY = endY;
+		}
+
+		boolean finish() {
+			final boolean hasExecuted = this.repeater.hasExecuted();
+			this.repeater.stop();
+			return !hasExecuted;
+		}
+
+		@NonNull
+		public Line line() {
+			return line;
+		}
+
+		@NonNull
+		public Repeater repeater() {
+			return repeater;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (obj == null || obj.getClass() != this.getClass()) {
+				return false;
+			}
+			var that = (TrackedTouch) obj;
+			return Objects.equals(this.line, that.line) && Objects.equals(this.repeater, that.repeater);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(line, repeater);
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "TrackedTouch[" + "line=" + line + ", " + "repeater=" + repeater + ']';
+		}
+
 	}
 }

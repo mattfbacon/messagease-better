@@ -1,16 +1,15 @@
 package nz.felle.messageasebetter;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
 final class KeyAction extends Action {
+	public static final char NONE = '\0';
+	private final @NonNull TextShower shower = new TextShower("");
 	public char normalKey;
 	public char numKey;
-
-	public static char NONE = '\0';
+	private char lastShownKey = NONE;
 
 	//region Record Boilerplate
 	KeyAction(char normalKey, char numKey) {
@@ -20,11 +19,14 @@ final class KeyAction extends Action {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		KeyAction that = (KeyAction) obj;
-		return Objects.equals(this.normalKey, that.normalKey) &&
-			Objects.equals(this.numKey, that.numKey);
+		return Objects.equals(this.normalKey, that.normalKey) && Objects.equals(this.numKey, that.numKey);
 	}
 
 	@Override
@@ -35,9 +37,7 @@ final class KeyAction extends Action {
 	@NonNull
 	@Override
 	public String toString() {
-		return "KeyAction[" +
-			"normalKey=" + normalKey + ", " +
-			"numKey=" + numKey + ']';
+		return "KeyAction[" + "normalKey=" + normalKey + ", " + "numKey=" + numKey + ']';
 	}
 	//endregion
 
@@ -62,13 +62,8 @@ final class KeyAction extends Action {
 		}
 	}
 
-	private final @NonNull TextShower shower = new TextShower("");
-	private char lastShownKey = NONE;
-
-	public
-	@Override
-	@NonNull
-	ActionShower show(final @NonNull InputMethodView view) {
+	public @Override
+	@NonNull ActionShower show(final @NonNull InputMethodView view) {
 		final char key = getKey(view);
 		if (key == NONE) {
 			return null;

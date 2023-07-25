@@ -1,7 +1,6 @@
 package nz.felle.messageasebetter;
 
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 
@@ -12,7 +11,7 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 
 	@Override
 	public View onCreateInputView() {
-		InputMethodView view = (InputMethodView)getLayoutInflater().inflate(R.layout.keyboard, null);
+		InputMethodView view = (InputMethodView) getLayoutInflater().inflate(R.layout.keyboard, null);
 		view.updateInputConnection(getCurrentInputConnection());
 		view.service = this;
 		currentView = view;
@@ -64,7 +63,14 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 	}
 
 	@Override
-	public void onUpdateSelection(final int oldSelStart, final int oldSelEnd, final int newSelStart, final int newSelEnd, final int candidatesStart, final int candidatesEnd) {
+	public void onUpdateSelection(
+		final int oldSelStart,
+		final int oldSelEnd,
+		final int newSelStart,
+		final int newSelEnd,
+		final int candidatesStart,
+		final int candidatesEnd
+	) {
 		super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd);
 		assert currentView != null;
 		currentView.selection.start = newSelStart;

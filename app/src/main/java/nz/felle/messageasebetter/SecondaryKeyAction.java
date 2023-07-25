@@ -23,8 +23,12 @@ public final class SecondaryKeyAction extends Action {
 
 	@Override
 	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		SecondaryKeyAction that = (SecondaryKeyAction) obj;
 		return this.key == that.key;
 	}
@@ -37,8 +41,7 @@ public final class SecondaryKeyAction extends Action {
 	@NonNull
 	@Override
 	public String toString() {
-		return "SecondaryKeyAction[" +
-			"key=" + key + ']';
+		return "SecondaryKeyAction[" + "key=" + key + ']';
 	}
 	//endregion
 

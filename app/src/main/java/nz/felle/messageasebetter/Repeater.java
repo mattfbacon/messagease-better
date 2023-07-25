@@ -6,24 +6,20 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 
 public final class Repeater implements Runnable {
-	private final @NonNull
-	InputMethodView view;
+	private static final float MIN_INTERVAL = 50.0f;
+	private static final long INITIAL_INTERVAL = 800;
+	private static final float SPEEDUP_FACTOR = 0.85f;
+	private static final float SECONDARY_INTERVAL = 500.0f;
+	private static final @NonNull Handler handler = new Handler(Looper.getMainLooper());
+	private final @NonNull InputMethodView view;
 	private final int touchId;
+	private float interval = SECONDARY_INTERVAL;
+	private boolean hasExecuted = false;
 
 	public Repeater(final @NonNull InputMethodView view, final int touchId) {
 		this.view = view;
 		this.touchId = touchId;
 	}
-
-	private static final float MIN_INTERVAL = 50.0f;
-	private static final long INITIAL_INTERVAL = 800;
-	private static final float SPEEDUP_FACTOR = 0.85f;
-	private static final float SECONDARY_INTERVAL = 500.0f;
-	private static final @NonNull
-	Handler handler = new Handler(Looper.getMainLooper());
-
-	private float interval = SECONDARY_INTERVAL;
-	private boolean hasExecuted = false;
 
 	public boolean hasExecuted() {
 		return hasExecuted;

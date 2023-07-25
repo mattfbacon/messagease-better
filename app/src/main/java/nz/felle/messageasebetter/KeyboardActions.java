@@ -1,8 +1,5 @@
 package nz.felle.messageasebetter;
 
-import android.util.Log;
-import android.view.inputmethod.EditorInfo;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -10,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /* package-private */ class KeyboardActions {
+	// @formatter:off
 	/* package-private */ static final List<List<Map<Motion, Action>>> ACTIONS = List.of(
 		// first row
 		List.of(
@@ -266,5 +264,5 @@ import java.util.Map;
 			)
 		)
 	);
-
+	// @formatter:on
 }

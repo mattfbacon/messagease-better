@@ -1,24 +1,21 @@
 package nz.felle.messageasebetter;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.util.Log;
-
 import java.util.Objects;
 
 public final class IconShower extends ActionShower {
+	private final boolean secondary;
 	private @Nullable Drawable drawable = null;
 	private @DrawableRes int drawableId;
-	private final boolean secondary;
-
 	private @ColorInt int lightColor = -1;
 	private @ColorInt int darkColor = -1;
 
@@ -33,7 +30,9 @@ public final class IconShower extends ActionShower {
 		this.secondary = secondary;
 	}
 
-	public void updateDrawable(final @DrawableRes int drawableId, final @NonNull InputMethodView view) {
+	public void updateDrawable(
+		final @DrawableRes int drawableId, final @NonNull InputMethodView view
+	) {
 		if (drawableId != this.drawableId) {
 			this.drawable = null;
 			this.drawableId = drawableId;
@@ -44,8 +43,12 @@ public final class IconShower extends ActionShower {
 	//region Boilerplate
 	@Override
 	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		IconShower that = (IconShower) obj;
 		return Objects.equals(this.drawable, that.drawable);
 	}
@@ -58,13 +61,18 @@ public final class IconShower extends ActionShower {
 	@NonNull
 	@Override
 	public String toString() {
-		return "IconShower[" +
-			"drawable=" + drawable + ']';
+		return "IconShower[" + "drawable=" + drawable + ']';
 	}
 	//endregion
 
 	@Override
-	public void show(final @NonNull Canvas canvas, final float centerX, final float centerY, final @NonNull Paint paint, final boolean dark) {
+	public void show(
+		final @NonNull Canvas canvas,
+		final float centerX,
+		final float centerY,
+		final @NonNull Paint paint,
+		final boolean dark
+	) {
 		drawable.setTint(dark ? darkColor : lightColor);
 
 		final int size = Math.round(paint.getTextSize());

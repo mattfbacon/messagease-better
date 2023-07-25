@@ -16,10 +16,7 @@ public final class SettingsActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.settings_activity);
 		if (savedInstanceState == null) {
-			getSupportFragmentManager()
-				.beginTransaction()
-				.replace(R.id.settings, new SettingsFragment())
-				.commit();
+			getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
 		}
 		final @Nullable ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null) {
@@ -29,14 +26,13 @@ public final class SettingsActivity extends AppCompatActivity {
 	}
 
 	@Override
-	public void onCreate(final @Nullable Bundle savedInstanceState, final @Nullable PersistableBundle persistentState) {
+	public void onCreate(
+		final @Nullable Bundle savedInstanceState, final @Nullable PersistableBundle persistentState
+	) {
 		super.onCreate(savedInstanceState, persistentState);
 		setContentView(R.layout.settings_activity);
 		if (savedInstanceState == null) {
-			getSupportFragmentManager()
-				.beginTransaction()
-				.replace(R.id.settings, new SettingsFragment())
-				.commit();
+			getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
 		}
 		final @Nullable ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null) {
@@ -46,7 +42,9 @@ public final class SettingsActivity extends AppCompatActivity {
 
 	public static class SettingsFragment extends PreferenceFragmentCompat {
 		@Override
-		public void onCreatePreferences(final @Nullable Bundle savedInstanceState, final @Nullable String rootKey) {
+		public void onCreatePreferences(
+			final @Nullable Bundle savedInstanceState, final @Nullable String rootKey
+		) {
 			setPreferencesFromResource(R.xml.root_preferences, rootKey);
 		}
 	}

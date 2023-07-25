@@ -1,5 +1,11 @@
-<vector android:autoMirrored="true" android:height="24dp"
-    android:viewportHeight="960" android:viewportWidth="960"
-    android:width="24dp" android:tint="@color/keyboard_key_text_color_secondary_light" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="@android:color/white" android:pathData="m480,460 l160,-160L320,300l160,160ZM760,120q33,0 56.5,23.5T840,200v560q0,33 -23.5,56.5T760,840L200,840q-33,0 -56.5,-23.5T120,760v-560q0,-33 23.5,-56.5T200,120h560ZM200,640v120h560v-120L200,640ZM760,560v-360L200,200v360h560ZM200,640v120,-120Z"/>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:width="24dp"
+	android:height="24dp"
+	android:autoMirrored="true"
+	android:tint="@color/keyboard_key_text_color_secondary_light"
+	android:viewportWidth="960"
+	android:viewportHeight="960">
+	<path
+		android:fillColor="@android:color/white"
+		android:pathData="m480,460 l160,-160L320,300l160,160ZM760,120q33,0 56.5,23.5T840,200v560q0,33 -23.5,56.5T760,840L200,840q-33,0 -56.5,-23.5T120,760v-560q0,-33 23.5,-56.5T200,120h560ZM200,640v120h560v-120L200,640ZM760,560v-360L200,200v360h560ZM200,640v120,-120Z" />
 </vector>

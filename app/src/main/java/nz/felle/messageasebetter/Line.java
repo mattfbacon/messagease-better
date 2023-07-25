@@ -25,13 +25,14 @@ public final class Line {
 
 	@Override
 	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		Line that = (Line) obj;
-		return Float.floatToIntBits(this.startX) == Float.floatToIntBits(that.startX) &&
-			Float.floatToIntBits(this.startY) == Float.floatToIntBits(that.startY) &&
-			Float.floatToIntBits(this.endX) == Float.floatToIntBits(that.endX) &&
-			Float.floatToIntBits(this.endY) == Float.floatToIntBits(that.endY);
+		return Float.floatToIntBits(this.startX) == Float.floatToIntBits(that.startX) && Float.floatToIntBits(this.startY) == Float.floatToIntBits(that.startY) && Float.floatToIntBits(this.endX) == Float.floatToIntBits(that.endX) && Float.floatToIntBits(this.endY) == Float.floatToIntBits(that.endY);
 	}
 
 	@Override
@@ -42,11 +43,7 @@ public final class Line {
 	@NonNull
 	@Override
 	public String toString() {
-		return "Line[" +
-			"startX=" + startX + ", " +
-			"startY=" + startY + ", " +
-			"endX=" + endX + ", " +
-			"endY=" + endY + ']';
+		return "Line[" + "startX=" + startX + ", " + "startY=" + startY + ", " + "endX=" + endX + ", " + "endY=" + endY + ']';
 	}
 	//endregion
 
@@ -95,6 +92,6 @@ public final class Line {
 	public float length() {
 		final float deltaX = deltaX();
 		final float deltaY = deltaY();
-		return (float)Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+		return (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 	}
 }

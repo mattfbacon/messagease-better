@@ -1,19 +1,14 @@
 package nz.felle.messageasebetter;
 
-import android.graphics.drawable.Drawable;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
 public final class SetCapsAction extends Action {
-	private static final @NonNull
-	IconShower upperIcon = new IconShower(R.drawable.ic_caps, true);
-	private static final @NonNull
-	IconShower doubleUpperIcon = new IconShower(R.drawable.ic_caps_double, true);
-	private static final @NonNull
-	IconShower lowerIcon = new IconShower(R.drawable.ic_lower, true);
+	private static final @NonNull IconShower upperIcon = new IconShower(R.drawable.ic_caps, true);
+	private static final @NonNull IconShower doubleUpperIcon = new IconShower(R.drawable.ic_caps_double, true);
+	private static final @NonNull IconShower lowerIcon = new IconShower(R.drawable.ic_lower, true);
 
 	private final boolean setTo;
 
@@ -24,8 +19,12 @@ public final class SetCapsAction extends Action {
 
 	@Override
 	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		SetCapsAction that = (SetCapsAction) obj;
 		return this.setTo == that.setTo;
 	}
@@ -38,8 +37,7 @@ public final class SetCapsAction extends Action {
 	@NonNull
 	@Override
 	public String toString() {
-		return "SetCapsAction[" +
-			"setTo=" + setTo + ']';
+		return "SetCapsAction[" + "setTo=" + setTo + ']';
 	}
 	//endregion
 

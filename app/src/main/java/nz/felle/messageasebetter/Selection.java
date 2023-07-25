@@ -27,11 +27,14 @@ public final class Selection {
 
 	@Override
 	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) return true;
-		if (obj == null || obj.getClass() != this.getClass()) return false;
+		if (obj == this) {
+			return true;
+		}
+		if (obj == null || obj.getClass() != this.getClass()) {
+			return false;
+		}
 		Selection that = (Selection) obj;
-		return this.start == that.start &&
-			this.end == that.end;
+		return this.start == that.start && this.end == that.end;
 	}
 
 	@Override
@@ -42,15 +45,14 @@ public final class Selection {
 	@NonNull
 	@Override
 	public String toString() {
-		return "Selection[" +
-			"start=" + start + ", " +
-			"end=" + end + ']';
+		return "Selection[" + "start=" + start + ", " + "end=" + end + ']';
 	}
 	//endregion
 
 	public int length() {
 		return end - start;
 	}
+
 	public boolean isNonCursor() {
 		return length() > 0;
 	}
