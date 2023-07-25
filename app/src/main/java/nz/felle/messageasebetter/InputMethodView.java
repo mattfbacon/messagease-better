@@ -53,7 +53,7 @@ public final class InputMethodView extends View {
 	}
 	//endregion
 
-	private final KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
+	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
 
 	private float buttonWidth() {
 		return this.getWidth() / 4.0f;
@@ -63,17 +63,17 @@ public final class InputMethodView extends View {
 		return this.getHeight() / 4.0f;
 	}
 
-	private InputConnection conn;
+	private @Nullable InputConnection conn = null;
 
 	public void updateInputConnection(@NonNull InputConnection conn) {
 		this.conn = conn;
 	}
 
-	InputMethodService service = null;
+	@Nullable InputMethodService service = null;
 
 	private boolean neverUseCodepoints = false;
 
-	void updateQuirks(final String packageName) {
+	void updateQuirks(final @NonNull String packageName) {
 		neverUseCodepoints = false;
 
 		Log.i("nz.felle.messageasebetter", "package name is " + packageName);
@@ -126,7 +126,7 @@ public final class InputMethodView extends View {
 		final int initialPos = pos;
 
 		while (true) {
-			CharSequence chars = switch (direction) {
+			final @NonNull CharSequence chars = switch (direction) {
 				case BEFORE -> conn.getTextBeforeCursor(chunk, 0);
 				case AFTER -> conn.getTextAfterCursor(chunk, 0);
 			};
@@ -193,13 +193,13 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	private CapsMode _caps = CapsMode.LOWER;
+	private @NonNull CapsMode _caps = CapsMode.LOWER;
 
 	CapsMode getCaps() {
 		return _caps;
 	}
 
-	void setCaps(final CapsMode value) {
+	void setCaps(final @NonNull CapsMode value) {
 		final boolean needsUpdate = value != _caps;
 		_caps = value;
 		if (needsUpdate) {
@@ -251,7 +251,7 @@ public final class InputMethodView extends View {
 		@NonNull
 		private final Repeater repeater;
 
-		TrackedTouch(@NonNull Line line, @NonNull Repeater repeater) {
+		TrackedTouch(final @NonNull Line line, final @NonNull Repeater repeater) {
 			this.line = line;
 			this.repeater = repeater;
 		}
@@ -297,7 +297,7 @@ public final class InputMethodView extends View {
 		}
 
 		@Override
-		public String toString() {
+		public @NonNull String toString() {
 			return "TrackedTouch[" +
 				"line=" + line + ", " +
 				"repeater=" + repeater + ']';
