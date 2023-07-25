@@ -171,19 +171,19 @@ import java.util.Map;
 						return shower;
 					}
 				},
-				Motion.UP_LEFT, new Action() {
+				Motion.UP_LEFT, new CustomAction(R.drawable.ic_line_start_diamond) {
 					@Override
 					void execute(@NonNull InputMethodView view) {
 						view.doWord(Direction.BEFORE, true);
 					}
 				},
-				Motion.UP_RIGHT, new Action() {
+				Motion.UP_RIGHT, new CustomAction(R.drawable.ic_line_end_diamond) {
 					@Override
 					void execute(@NonNull InputMethodView view) {
 						view.doWord(Direction.AFTER, true);
 					}
 				},
-				Motion.RIGHT, new Action() {
+				Motion.RIGHT, new CustomAction(R.drawable.ic_arrow_right_alt) {
 					@Override
 					public void execute(@NonNull InputMethodView view) {
 						view.delete(1);
@@ -213,17 +213,35 @@ import java.util.Map;
 			Map.of(
 				Motion.NONE, new Action() {
 					@Override
+					@Nullable
+					ActionShower show(final @NonNull InputMethodView _view) {
+						return null;
+					}
+
+					@Override
 					public void execute(@NonNull InputMethodView view) {
 						view.insert(' ');
 					}
 				},
 				Motion.LEFT, new Action() {
 					@Override
+					@Nullable
+					ActionShower show(final @NonNull InputMethodView _view) {
+						return null;
+					}
+
+					@Override
 					public void execute(@NonNull InputMethodView view) {
 						view.moveCursor(-1);
 					}
 				},
 				Motion.RIGHT, new Action() {
+					@Override
+					@Nullable
+					ActionShower show(final @NonNull InputMethodView _view) {
+						return null;
+					}
+
 					@Override
 					void execute(@NonNull InputMethodView view) {
 						view.moveCursor(1);

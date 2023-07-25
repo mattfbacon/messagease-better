@@ -65,8 +65,9 @@ final class KeyAction extends Action {
 	private final @NonNull TextShower shower = new TextShower("");
 	private char lastShownKey = NONE;
 
-	public @Nullable
+	public
 	@Override
+	@NonNull
 	ActionShower show(final @NonNull InputMethodView view) {
 		final char key = getKey(view);
 		if (key == NONE) {
