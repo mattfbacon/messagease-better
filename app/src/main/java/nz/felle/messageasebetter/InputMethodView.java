@@ -69,7 +69,9 @@ public final class InputMethodView extends View {
 		this.conn = conn;
 	}
 
-	@Nullable InputMethodService service = null;
+	// Not nullable in practice, but late-initialized in InputMethodService::onCreateInputView.
+	// Annotation intentionally omitted.
+	InputMethodService service = null;
 
 	private boolean neverUseCodepoints = false;
 
