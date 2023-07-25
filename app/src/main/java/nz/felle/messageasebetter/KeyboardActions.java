@@ -196,7 +196,9 @@ import java.util.Map;
 				Motion.DOWN, new CustomAction(R.drawable.ic_bottom_panel_close) {
 					@Override
 					void execute(final @NonNull InputMethodView view) {
-						view.service.requestHideSelf(0);
+						if (view.service != null) {
+							view.service.requestHideSelf(0);
+						}
 					}
 				}
 			)

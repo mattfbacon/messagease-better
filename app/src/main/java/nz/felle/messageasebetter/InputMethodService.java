@@ -1,17 +1,21 @@
 package nz.felle.messageasebetter;
 
+import android.annotation.SuppressLint;
 import android.text.InputType;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.Nullable;
 
+import java.util.Locale;
+
 public final class InputMethodService extends android.inputmethodservice.InputMethodService {
 	private @Nullable InputMethodView currentView = null;
 
 	@Override
 	public View onCreateInputView() {
-		InputMethodView view = (InputMethodView) getLayoutInflater().inflate(R.layout.keyboard, null);
+		// There is no view root; this is a freestanding view.
+		@SuppressLint("InflateParams") InputMethodView view = (InputMethodView) getLayoutInflater().inflate(R.layout.keyboard, null);
 		view.updateInputConnection(getCurrentInputConnection());
 		view.service = this;
 		currentView = view;
@@ -30,10 +34,15 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		boolean initialCapsMode = false;
 		int selectionStart = 0;
 		int selectionEnd = 0;
+		@Nullable Locale locale = null;
+		@Nullable String packageName = null;
 		if (info != null) {
 			inputType = info.inputType & InputType.TYPE_MASK_CLASS;
+
 			imeOptions = info.imeOptions;
+
 			initialCapsMode = info.initialCapsMode > 0;
+
 			if (info.initialSelStart != -1) {
 				selectionStart = info.initialSelStart;
 				if (info.initialSelEnd != -1) {
@@ -41,6 +50,12 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 				} else {
 					selectionEnd = selectionStart;
 				}
+			}
+
+			packageName = info.packageName;
+
+			if (info.hintLocales != null) {
+				locale = info.hintLocales.get(0);
 			}
 		}
 
@@ -57,9 +72,9 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		currentView.selection.start = selectionStart;
 		currentView.selection.end = selectionEnd;
 
-		currentView.updateQuirks(info.packageName);
+		currentView.updateQuirks(packageName);
 
-		currentView.setLocale(info.hintLocales != null ? info.hintLocales.get(0) : null);
+		currentView.setLocale(locale);
 	}
 
 	@Override

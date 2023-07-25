@@ -24,11 +24,13 @@ public final class IconShower extends ActionShower {
 		this.secondary = secondary;
 	}
 
+	/* COMMENTED OUT - unused
 	IconShower(final @NonNull Drawable drawable, final boolean secondary) {
 		this.drawable = drawable;
 		this.drawableId = 0;
 		this.secondary = secondary;
 	}
+	*/
 
 	public void updateDrawable(
 		final @DrawableRes int drawableId, final @NonNull InputMethodView view
@@ -73,6 +75,7 @@ public final class IconShower extends ActionShower {
 		final @NonNull Paint paint,
 		final boolean dark
 	) {
+		assert drawable != null;
 		drawable.setTint(dark ? darkColor : lightColor);
 
 		final int size = Math.round(paint.getTextSize());

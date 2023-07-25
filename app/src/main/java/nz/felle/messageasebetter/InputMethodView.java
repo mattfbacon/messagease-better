@@ -1,5 +1,6 @@
 package nz.felle.messageasebetter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
@@ -33,15 +34,14 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class InputMethodView extends View {
-	static float HEIGHT = 300f;
+	static final float HEIGHT = 300f;
 	final @NonNull Selection selection = new Selection(0, 0);
 	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
 	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
 	private @NonNull
 	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
 	private final @NonNull HashMap<Integer, TrackedTouch> trackedTouches = new HashMap<>();
-	// Not nullable in practice, but late-initialized in InputMethodService::onCreateInputView.
-	// Annotation intentionally omitted.
+	@Nullable
 	InputMethodService service = null;
 	private @Nullable InputConnection conn = null;
 	private boolean neverUseCodepoints = false;
@@ -87,8 +87,13 @@ public final class InputMethodView extends View {
 		this.conn = conn;
 	}
 
-	void updateQuirks(final @NonNull String packageName) {
+	void updateQuirks(final @Nullable String packageName) {
 		neverUseCodepoints = false;
+
+		if (packageName == null) {
+			Log.i("nz.felle.messageasebetter", "null package name, resetting quirks");
+			return;
+		}
 
 		Log.i("nz.felle.messageasebetter", "package name is " + packageName);
 		if (packageName.equals("com.sonelli.juicessh")) {
@@ -102,6 +107,7 @@ public final class InputMethodView extends View {
 	}
 
 	public void performContextMenuAction(final int action) {
+		assert conn != null;
 		conn.performContextMenuAction(action);
 	}
 
@@ -110,11 +116,14 @@ public final class InputMethodView extends View {
 		if (actAction == EditorInfo.IME_ACTION_NONE) {
 			insert('\n');
 		} else {
+			assert conn != null;
 			conn.performEditorAction(actAction);
 		}
 	}
 
 	public void doWord(final Direction direction, final boolean delete) {
+		assert conn != null;
+
 		final int MULTIPLIER = 10;
 		int chunk = 100;
 
@@ -254,12 +263,16 @@ public final class InputMethodView extends View {
 	}
 
 	void insert(final char ch) {
+		assert conn != null;
+
 		setCaps(getCaps().next());
 
 		conn.commitText(Character.toString(ch), 1);
 	}
 
 	private boolean deleteSelection() {
+		assert conn != null;
+
 		if (!selection.isNonCursor()) {
 			return false;
 		}
@@ -273,6 +286,8 @@ public final class InputMethodView extends View {
 	}
 
 	void delete(final int amount) {
+		assert conn != null;
+
 		if (deleteSelection()) {
 			return;
 		}
@@ -291,6 +306,8 @@ public final class InputMethodView extends View {
 	}
 
 	void moveCursor(final int offset) {
+		assert conn != null;
+
 		int newPosition;
 		if (selection.isNonCursor()) {
 			if (offset > 0) {
@@ -325,6 +342,10 @@ public final class InputMethodView extends View {
 		recognizer.setRecognitionListener(new RecognitionListener() {
 			@Override
 			public void onResults(final Bundle resultsBundle) {
+				if (view.conn == null) {
+					return;
+				}
+
 				final ArrayList<String> results = resultsBundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 				if (results.size() == 0) {
 					return;
@@ -464,6 +485,8 @@ public final class InputMethodView extends View {
 		}
 	}
 
+	// Symmetry
+	@SuppressWarnings("UnusedReturnValue")
 	boolean processLine(final int pointerId) {
 		return processLine(Objects.requireNonNull(this.trackedTouches.get(pointerId), "invalid pointer id").line);
 	}
@@ -474,13 +497,13 @@ public final class InputMethodView extends View {
 		final @NonNull Motion motion = line.asMotion(motionThresholdX, motionThresholdY);
 
 		final int actionRow = (int) Math.floor((line.startY - this.getY()) / this.buttonHeight());
-		final float colFrac = (line.startX - this.getX()) / this.buttonWidth();
-		int actionCol = (int) Math.floor(colFrac);
+		final float colFractional = (line.startX - this.getX()) / this.buttonWidth();
+		int actionCol = (int) Math.floor(colFractional);
 
 		if (actionRow == 3) {
-			if (_numMode && colFrac < 1.5) {
+			if (_numMode && colFractional < 1.5) {
 				actionCol = 0;
-			} else if (colFrac < 3) {
+			} else if (colFractional < 3) {
 				actionCol = 1;
 			} else {
 				actionCol = 2;
@@ -497,6 +520,8 @@ public final class InputMethodView extends View {
 		}
 	}
 
+	// `performClick` means nothing here. This is all about swiping and start and end positions.
+	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	public boolean onTouchEvent(final @Nullable MotionEvent event) {
 		if (event == null) {

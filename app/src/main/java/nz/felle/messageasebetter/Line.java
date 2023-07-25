@@ -6,8 +6,8 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 public final class Line {
-	public float startX;
-	public float startY;
+	public final float startX;
+	public final float startY;
 	public float endX;
 	public float endY;
 

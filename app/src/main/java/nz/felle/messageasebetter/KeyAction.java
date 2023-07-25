@@ -1,14 +1,15 @@
 package nz.felle.messageasebetter;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
 final class KeyAction extends Action {
 	public static final char NONE = '\0';
+	public final char normalKey;
+	public final char numKey;
 	private final @NonNull TextShower shower = new TextShower("");
-	public char normalKey;
-	public char numKey;
 	private char lastShownKey = NONE;
 
 	//region Record Boilerplate
@@ -63,7 +64,7 @@ final class KeyAction extends Action {
 	}
 
 	public @Override
-	@NonNull ActionShower show(final @NonNull InputMethodView view) {
+	@Nullable ActionShower show(final @NonNull InputMethodView view) {
 		final char key = getKey(view);
 		if (key == NONE) {
 			return null;

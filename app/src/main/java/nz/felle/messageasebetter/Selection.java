@@ -21,7 +21,7 @@ public final class Selection {
 	}
 
 	@Override
-	public Selection clone() {
+	public @NonNull Selection clone() {
 		return new Selection(this);
 	}
 
