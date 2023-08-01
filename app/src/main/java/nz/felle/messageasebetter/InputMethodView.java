@@ -41,6 +41,7 @@ public final class InputMethodView extends View {
 	private @NonNull
 	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
 	private final @NonNull HashMap<Integer, TrackedTouch> trackedTouches = new HashMap<>();
+	private final @NonNull StringBuilder composeBuffer = new StringBuilder();
 	@Nullable
 	InputMethodService service = null;
 	private @Nullable InputConnection conn = null;
@@ -49,6 +50,7 @@ public final class InputMethodView extends View {
 	private boolean _numMode = false;
 	private @NonNull CapsMode _caps = CapsMode.LOWER;
 	private int _actAction = EditorInfo.IME_ACTION_UNSPECIFIED;
+	private boolean composeActive = false;
 
 	//region Constructor Boilerplate
 	public InputMethodView(final @Nullable Context context) {
@@ -118,6 +120,27 @@ public final class InputMethodView extends View {
 		} else {
 			assert conn != null;
 			conn.performEditorAction(actAction);
+		}
+	}
+
+	public void beginCompose() {
+		composeActive = true;
+		composeBuffer.setLength(0);
+	}
+
+	private void appendCompose(final char ch) {
+		assert conn != null;
+
+		composeBuffer.append(ch);
+
+		final @NonNull String buffer = composeBuffer.toString();
+		conn.setComposingText(buffer, buffer.length());
+
+		final @Nullable String output = ComposeTable.get(buffer);
+		if (output != null) {
+			composeActive = false;
+			conn.setComposingText(output, 1);
+			conn.finishComposingText();
 		}
 	}
 
@@ -267,7 +290,11 @@ public final class InputMethodView extends View {
 
 		setCaps(getCaps().next());
 
-		conn.commitText(Character.toString(ch), 1);
+		if (composeActive) {
+			appendCompose(ch);
+		} else {
+			conn.commitText(Character.toString(ch), 1);
+		}
 	}
 
 	private boolean deleteSelection() {
@@ -287,6 +314,23 @@ public final class InputMethodView extends View {
 
 	void delete(final int amount) {
 		assert conn != null;
+
+		if (composeActive) {
+			if (amount >= 0) {
+				return;
+			}
+
+			final int delete = Integer.min(-amount, composeBuffer.length());
+			final int newLength = composeBuffer.length() - delete;
+			composeBuffer.setLength(newLength);
+			conn.setComposingText(composeBuffer.toString(), 1);
+			if (composeBuffer.length() == 0) {
+				conn.finishComposingText();
+				composeActive = false;
+			}
+
+			return;
+		}
 
 		if (deleteSelection()) {
 			return;
@@ -360,7 +404,7 @@ public final class InputMethodView extends View {
 				final @NonNull String text = switch (view.getCaps()) {
 					case LOWER -> rawText;
 					case UPPER -> Character.toUpperCase(rawText.charAt(0)) + rawText.substring(1);
-					case UPPER_PERMANENT -> rawText.toUpperCase();
+					case UPPER_PERMANENT -> rawText.toUpperCase(locale.toLocale());
 				};
 
 				view.setCaps(view.getCaps().next());

@@ -99,6 +99,11 @@ import java.util.Map;
 						return view.getNumMode() ? ifNum : ifNotNum;
 					}
 				},
+				Motion.UP, new CustomAction(R.drawable.ic_group_work) {
+					@Override void execute(final @NonNull InputMethodView view) {
+						view.beginCompose();
+					}
+				},
 				Motion.UP_LEFT, new ContextMenuAction(R.drawable.ic_select_all, android.R.id.selectAll),
 				Motion.UP_RIGHT, new ContextMenuAction(R.drawable.ic_copy, android.R.id.copy),
 				Motion.DOWN_RIGHT, new ContextMenuAction(R.drawable.ic_paste, android.R.id.paste),
