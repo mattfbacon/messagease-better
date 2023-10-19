@@ -35,7 +35,6 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		int selectionStart = 0;
 		int selectionEnd = 0;
 		@Nullable Locale locale = null;
-		@Nullable String packageName = null;
 		if (info != null) {
 			inputType = info.inputType & InputType.TYPE_MASK_CLASS;
 
@@ -51,8 +50,6 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 					selectionEnd = selectionStart;
 				}
 			}
-
-			packageName = info.packageName;
 
 			if (info.hintLocales != null) {
 				locale = info.hintLocales.get(0);
@@ -71,8 +68,6 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 
 		currentView.selection.start = selectionStart;
 		currentView.selection.end = selectionEnd;
-
-		currentView.updateQuirks(packageName);
 
 		currentView.setLocale(locale);
 	}

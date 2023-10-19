@@ -45,7 +45,6 @@ public final class InputMethodView extends View {
 	@Nullable
 	InputMethodService service = null;
 	private @Nullable InputConnection conn = null;
-	private boolean neverUseCodepoints = false;
 	private @NonNull ULocale locale = defaultLocale;
 	private boolean _numMode = false;
 	private @NonNull CapsMode _caps = CapsMode.LOWER;
@@ -87,21 +86,6 @@ public final class InputMethodView extends View {
 
 	public void updateInputConnection(@NonNull InputConnection conn) {
 		this.conn = conn;
-	}
-
-	void updateQuirks(final @Nullable String packageName) {
-		neverUseCodepoints = false;
-
-		if (packageName == null) {
-			Log.i("nz.felle.messageasebetter", "null package name, resetting quirks");
-			return;
-		}
-
-		Log.i("nz.felle.messageasebetter", "package name is " + packageName);
-		if (packageName.equals("com.sonelli.juicessh")) {
-			Log.w("nz.felle.messageasebetter", "applying quirks for JuiceSSH");
-			neverUseCodepoints = true;
-		}
 	}
 
 	void setLocale(final @Nullable Locale setTo) {
@@ -337,15 +321,9 @@ public final class InputMethodView extends View {
 		}
 
 		if (amount < 0) {
-			if (neverUseCodepoints || !conn.deleteSurroundingTextInCodePoints(-amount, 0)) {
-				// assume at this point that they probably don't have surrogates
-				conn.deleteSurroundingText(-amount, 0);
-			}
+			conn.deleteSurroundingText(-amount, 0);
 		} else {
-			if (neverUseCodepoints || !conn.deleteSurroundingTextInCodePoints(0, amount)) {
-				// ditto
-				conn.deleteSurroundingText(0, amount);
-			}
+			conn.deleteSurroundingText(0, amount);
 		}
 	}
 
