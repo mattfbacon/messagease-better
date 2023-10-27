@@ -59,7 +59,7 @@ final class KeyAction extends Action {
 	public void execute(final @NonNull InputMethodView view) {
 		final char key = getKey(view);
 		if (key != NONE) {
-			view.insert(key);
+			view.typeCharacter(key);
 		}
 	}
 

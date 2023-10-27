@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.drawable.ColorDrawable;
 import android.icu.text.BreakIterator;
 import android.icu.util.ULocale;
 import android.os.Bundle;
@@ -21,11 +22,16 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.Consumer;
+import androidx.emoji2.emojipicker.EmojiPickerView;
+import androidx.emoji2.emojipicker.EmojiViewItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +56,8 @@ public final class InputMethodView extends View {
 	private @NonNull CapsMode _caps = CapsMode.LOWER;
 	private int _actAction = EditorInfo.IME_ACTION_UNSPECIFIED;
 	private boolean composeActive = false;
+	private final @NonNull Consumer<EmojiViewItem> emojiListener = (item) -> this.insertString(item.getEmoji());
+	private boolean emojiPatched = false;
 
 	//region Constructor Boilerplate
 	public InputMethodView(final @Nullable Context context) {
@@ -100,11 +108,45 @@ public final class InputMethodView extends View {
 	public void performActAction() {
 		final int actAction = getActAction();
 		if (actAction == EditorInfo.IME_ACTION_NONE) {
-			insert('\n');
+			typeCharacter('\n');
 		} else {
 			assert conn != null;
 			conn.performEditorAction(actAction);
 		}
+	}
+
+	public void beginEmoji() {
+		final @NonNull EmojiPickerView view = this.getRootView().requireViewById(R.id.emoji_picker);
+		if (view.getBackground() instanceof ColorDrawable) {
+			((ColorDrawable) view.getBackground()).setColor(paints.backgroundColor);
+		} else {
+			view.setBackground(new ColorDrawable(paints.backgroundColor));
+		}
+		view.setOnEmojiPickedListener(this.emojiListener);
+
+		if (!emojiPatched) {
+			final @NonNull LinearLayout layout = (LinearLayout) view.getChildAt(0);
+			final @NonNull View header = layout.getChildAt(0);
+			layout.removeView(header);
+			final @NonNull LinearLayout newHeader = new LinearLayout(this.getContext());
+			newHeader.setOrientation(LinearLayout.HORIZONTAL);
+			final @NonNull TextView backButton = new TextView(this.getContext());
+			backButton.setTextSize(32.0f);
+			backButton.setPadding(16, 0, 0, 0);
+			backButton.setText("←");
+			backButton.setOnClickListener((_x) -> this.endEmoji());
+			newHeader.addView(backButton);
+			newHeader.addView(header);
+			layout.addView(newHeader, 0);
+
+			emojiPatched = true;
+		}
+
+		view.setVisibility(View.VISIBLE);
+	}
+
+	public void endEmoji() {
+		this.getRootView().requireViewById(R.id.emoji_picker).setVisibility(View.GONE);
 	}
 
 	public void beginCompose() {
@@ -112,10 +154,10 @@ public final class InputMethodView extends View {
 		composeBuffer.setLength(0);
 	}
 
-	private void appendCompose(final char ch) {
+	private void appendCompose(final @NonNull String str) {
 		assert conn != null;
 
-		composeBuffer.append(ch);
+		composeBuffer.append(str);
 
 		final @NonNull String buffer = composeBuffer.toString();
 		conn.setComposingText(buffer, buffer.length());
@@ -269,15 +311,17 @@ public final class InputMethodView extends View {
 		Toast.makeText(getContext(), String.format("no action for row %s, col %s, motion %s", row + 1, col + 1, motion), Toast.LENGTH_SHORT).show();
 	}
 
-	void insert(final char ch) {
-		assert conn != null;
-
+	void typeCharacter(final char ch) {
 		setCaps(getCaps().next());
+		insertString(Character.toString(ch));
+	}
 
+	void insertString(final @NonNull String str) {
 		if (composeActive) {
-			appendCompose(ch);
+			appendCompose(str);
 		} else {
-			conn.commitText(Character.toString(ch), 1);
+			assert conn != null;
+			conn.commitText(str, 1);
 		}
 	}
 

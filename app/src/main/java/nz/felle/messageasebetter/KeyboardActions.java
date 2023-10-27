@@ -107,6 +107,11 @@ import java.util.Map;
 				Motion.UP_LEFT, new ContextMenuAction(R.drawable.ic_select_all, android.R.id.selectAll),
 				Motion.UP_RIGHT, new ContextMenuAction(R.drawable.ic_copy, android.R.id.copy),
 				Motion.DOWN_RIGHT, new ContextMenuAction(R.drawable.ic_paste, android.R.id.paste),
+				Motion.DOWN, new CustomAction(R.drawable.ic_face) {
+					@Override void execute(final @NonNull InputMethodView view) {
+						view.beginEmoji();
+					}
+				},
 				Motion.DOWN_LEFT, new ContextMenuAction(R.drawable.ic_cut, android.R.id.cut),
 				Motion.LEFT, new CustomAction(R.drawable.ic_go_to_start) {
 					@Override
@@ -225,7 +230,7 @@ import java.util.Map;
 
 					@Override
 					public void execute(@NonNull InputMethodView view) {
-						view.insert(' ');
+						view.typeCharacter(' ');
 					}
 				},
 				Motion.LEFT, new Action() {

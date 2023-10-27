@@ -47,7 +47,7 @@ public final class SecondaryKeyAction extends Action {
 
 	@Override
 	public void execute(final @NonNull InputMethodView view) {
-		view.insert(key);
+		view.typeCharacter(key);
 	}
 
 	@NonNull

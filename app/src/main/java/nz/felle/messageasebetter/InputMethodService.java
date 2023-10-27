@@ -5,6 +5,7 @@ import android.text.InputType;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.Locale;
@@ -15,11 +16,14 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 	@Override
 	public View onCreateInputView() {
 		// There is no view root; this is a freestanding view.
-		@SuppressLint("InflateParams") InputMethodView view = (InputMethodView) getLayoutInflater().inflate(R.layout.keyboard, null);
-		view.updateInputConnection(getCurrentInputConnection());
-		view.service = this;
-		currentView = view;
-		return view;
+		@SuppressLint("InflateParams") final @NonNull View layout = getLayoutInflater().inflate(R.layout.keyboard, null);
+
+		final @NonNull InputMethodView input = layout.requireViewById(R.id.input);
+		input.updateInputConnection(getCurrentInputConnection());
+		input.service = this;
+		currentView = input;
+
+		return layout;
 	}
 
 	@Override
