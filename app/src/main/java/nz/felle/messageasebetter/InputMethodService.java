@@ -74,6 +74,8 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		currentView.selection.end = selectionEnd;
 
 		currentView.setLocale(locale);
+
+		currentView.endEmoji();
 	}
 
 	@Override

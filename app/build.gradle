@@ -33,4 +33,5 @@ dependencies {
 	implementation 'com.google.android.material:material:1.9.0'
 	implementation 'androidx.preference:preference:1.2.0'
 	implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0'
+	implementation 'com.google.guava:guava:31.0.1-jre'
 }

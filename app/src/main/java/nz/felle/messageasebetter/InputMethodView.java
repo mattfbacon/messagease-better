@@ -32,6 +32,8 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 import androidx.emoji2.emojipicker.EmojiPickerView;
 import androidx.emoji2.emojipicker.EmojiViewItem;
+import androidx.emoji2.emojipicker.RecentEmojiProvider;
+import androidx.emoji2.emojipicker.RecentEmojiProviderAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,6 +117,8 @@ public final class InputMethodView extends View {
 		}
 	}
 
+	private static final @NonNull RecentEmojiProvider emojiRecentsProvider = new RecentEmojiProviderAdapter(new EmojiRecentsProvider());
+
 	public void beginEmoji() {
 		final @NonNull EmojiPickerView view = this.getRootView().requireViewById(R.id.emoji_picker);
 		if (view.getBackground() instanceof ColorDrawable) {
@@ -123,6 +127,7 @@ public final class InputMethodView extends View {
 			view.setBackground(new ColorDrawable(paints.backgroundColor));
 		}
 		view.setOnEmojiPickedListener(this.emojiListener);
+		view.setRecentEmojiProvider(this.emojiRecentsProvider);
 
 		if (!emojiPatched) {
 			final @NonNull LinearLayout layout = (LinearLayout) view.getChildAt(0);
