@@ -179,6 +179,12 @@ import java.util.Map;
 						return shower;
 					}
 				},
+				Motion.LEFT, new CustomAction(R.drawable.ic_undo) {
+					@Override
+					void execute(@NonNull InputMethodView view) {
+						view.doUndo();
+					}
+				},
 				Motion.UP_LEFT, new CustomAction(R.drawable.ic_line_start_diamond) {
 					@Override
 					void execute(@NonNull InputMethodView view) {

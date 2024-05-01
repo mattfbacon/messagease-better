@@ -17,6 +17,7 @@ import android.speech.SpeechRecognizer;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -105,6 +106,13 @@ public final class InputMethodView extends View {
 	public void performContextMenuAction(final int action) {
 		assert conn != null;
 		conn.performContextMenuAction(action);
+	}
+
+	public void doUndo() {
+		final long now = System.currentTimeMillis();
+		final int z = KeyEvent.KEYCODE_Z;
+		conn.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, z, 0, KeyEvent.META_CTRL_MASK));
+		conn.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, z, 0, KeyEvent.META_CTRL_MASK));
 	}
 
 	public void performActAction() {
