@@ -106,6 +106,7 @@ public final class InputMethodView extends View {
 	}
 
 	public void doUndo() {
+		assert conn != null;
 		final long now = System.currentTimeMillis();
 		final int z = KeyEvent.KEYCODE_Z;
 		conn.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, z, 0, KeyEvent.META_CTRL_MASK));
@@ -205,10 +206,11 @@ public final class InputMethodView extends View {
 		final int initialPos = pos;
 
 		while (true) {
-			final @NonNull CharSequence chars = switch (direction) {
+			final CharSequence chars = switch (direction) {
 				case BEFORE -> conn.getTextBeforeCursor(chunk, 0);
 				case AFTER -> conn.getTextAfterCursor(chunk, 0);
 			};
+			assert chars != null;
 
 			final int len = chars.length();
 			if (len == 0) {
@@ -587,12 +589,8 @@ public final class InputMethodView extends View {
 	}
 
 	@Override
-	protected void onDraw(final @Nullable Canvas canvas) {
+	protected void onDraw(final @NonNull Canvas canvas) {
 		super.onDraw(canvas);
-
-		if (canvas == null) {
-			return;
-		}
 
 		canvas.drawColor(paints.backgroundColor);
 
@@ -657,16 +655,6 @@ public final class InputMethodView extends View {
 			final boolean hasExecuted = this.repeater.hasExecuted();
 			this.repeater.stop();
 			return !hasExecuted;
-		}
-
-		@NonNull
-		public Line line() {
-			return line;
-		}
-
-		@NonNull
-		public Repeater repeater() {
-			return repeater;
 		}
 
 		@Override
