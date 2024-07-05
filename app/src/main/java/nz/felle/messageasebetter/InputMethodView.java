@@ -2,26 +2,23 @@ package nz.felle.messageasebetter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.drawable.ColorDrawable;
 import android.icu.text.BreakIterator;
 import android.icu.util.ULocale;
-import android.os.Bundle;
 import android.os.LocaleList;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.InputMethodSubtype;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -36,8 +33,8 @@ import androidx.emoji2.emojipicker.EmojiViewItem;
 import androidx.emoji2.emojipicker.RecentEmojiProvider;
 import androidx.emoji2.emojipicker.RecentEmojiProviderAdapter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -408,82 +405,17 @@ public final class InputMethodView extends View {
 	}
 
 	void takeVoiceInput() {
-		final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-		intent.putExtra(RecognizerIntent.EXTRA_ENABLE_FORMATTING, RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY);
-		intent.putExtra(RecognizerIntent.EXTRA_HIDE_PARTIAL_TRAILING_PUNCTUATION, false);
-		intent.putExtra(RecognizerIntent.EXTRA_MASK_OFFENSIVE_WORDS, false);
-
-		final SpeechRecognizer recognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
-
-		final InputMethodView view = this;
-
-		recognizer.setRecognitionListener(new RecognitionListener() {
-			@Override
-			public void onResults(final Bundle resultsBundle) {
-				if (view.conn == null) {
+		final @NonNull InputMethodManager imm = getContext().getSystemService(InputMethodManager.class);
+		for (final @NonNull Map.Entry<InputMethodInfo, List<InputMethodSubtype>> shortcut : imm.getShortcutInputMethodsAndSubtypes().entrySet()) {
+			for (final @NonNull InputMethodSubtype ty : shortcut.getValue()) {
+				if (ty.getMode().equals("voice")) {
+					assert service != null;
+					service.switchInputMethod(shortcut.getKey().getId(), ty);
 					return;
 				}
-
-				final ArrayList<String> results = resultsBundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-				if (results.size() == 0) {
-					return;
-				}
-
-				final @NonNull String rawText = results.get(0);
-
-				if (rawText.isEmpty()) {
-					return;
-				}
-
-				final @NonNull String text = switch (view.getCaps()) {
-					case LOWER -> rawText;
-					case UPPER -> Character.toUpperCase(rawText.charAt(0)) + rawText.substring(1);
-					case UPPER_PERMANENT -> rawText.toUpperCase(locale.toLocale());
-				};
-
-				view.setCaps(view.getCaps().next());
-
-				view.conn.commitText(text, 1);
 			}
-
-			@Override
-			public void onError(final int error) {
-				Log.e("nz.felle.messageasebetter takeVoiceInput", "onError " + error);
-				Toast.makeText(getContext(), String.format("voice input returned error %s", error), Toast.LENGTH_SHORT).show();
-			}
-
-			@Override
-			public void onEvent(final int event, final Bundle params) {
-			}
-
-			@Override
-			public void onReadyForSpeech(final Bundle params) {
-			}
-
-			@Override
-			public void onPartialResults(final Bundle params) {
-			}
-
-			@Override
-			public void onBufferReceived(final byte[] _data) {
-			}
-
-			@Override
-			public void onEndOfSpeech() {
-			}
-
-			@Override
-			public void onBeginningOfSpeech() {
-			}
-
-			@Override
-			public void onRmsChanged(final float _dbms) {
-			}
-		});
-
-		recognizer.startListening(intent);
+		}
+		Toast.makeText(getContext(), "could not find a voice input IME", Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
