@@ -6,7 +6,7 @@ import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
-public final class SecondaryKeyAction extends Action {
+public class SecondaryKeyAction extends Action {
 	private final char key;
 	private final @NonNull ActionShower shower;
 

@@ -133,7 +133,14 @@ import java.util.Map;
 			Map.of(
 				Motion.NONE, new KeyAction('t', '7'),
 				Motion.UP_LEFT, new SecondaryKeyAction('~'),
-				Motion.UP, new SecondaryKeyAction('¨'),
+				Motion.UP, new SecondaryKeyAction('¨') {
+					@Override
+					public void execute(final @NonNull InputMethodView view) {
+						// Lazy but works.
+						view.beginCompose();
+						view.typeCharacter('"');
+					}
+				},
 				Motion.UP_RIGHT, new KeyAction('y', KeyAction.NONE),
 				Motion.RIGHT, new SecondaryKeyAction('*'),
 				Motion.LEFT, new SecondaryKeyAction('<'),
