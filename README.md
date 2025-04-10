@@ -1,6 +1,6 @@
 # Messagease Better
 
-An implementation of the Messagease keyboard layout.
+An implementation of the Messagease keyboard layout for Android.
 
 ## Comparison to the official app
 
