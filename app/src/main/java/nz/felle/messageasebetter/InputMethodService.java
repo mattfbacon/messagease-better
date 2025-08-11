@@ -35,7 +35,7 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 
 		int inputType = 0;
 		int imeOptions = 0;
-		boolean initialCapsMode = false;
+		boolean startCaps = false;
 		int selectionStart = 0;
 		int selectionEnd = 0;
 		@Nullable Locale locale = null;
@@ -44,7 +44,7 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 
 			imeOptions = info.imeOptions;
 
-			initialCapsMode = info.initialCapsMode > 0;
+			startCaps = info.initialCapsMode > 0;
 
 			if (info.initialSelStart != -1) {
 				selectionStart = info.initialSelStart;
@@ -68,7 +68,11 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 			currentView.setActAction(imeOptions & EditorInfo.IME_MASK_ACTION);
 		}
 
-		currentView.setCaps(initialCapsMode ? CapsMode.UPPER : CapsMode.LOWER);
+		if (startCaps) {
+			currentView.setCaps(CapsMode.UPPER);
+		} else {
+			currentView.setAutoCaps();
+		}
 
 		currentView.selection.start = selectionStart;
 		currentView.selection.end = selectionEnd;

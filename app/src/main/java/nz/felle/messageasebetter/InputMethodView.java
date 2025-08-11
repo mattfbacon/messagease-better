@@ -286,6 +286,29 @@ public final class InputMethodView extends View {
 		}
 	}
 
+	private @Nullable CapsMode getAutoCaps() {
+		if (_numMode || conn == null) {
+			return null;
+		}
+
+		final var beforeText = conn.getTextBeforeCursor(1, 0);
+		if (beforeText == null) {
+			return null;
+		}
+		if (beforeText.length() > 0) {
+			final var lastChar = beforeText.charAt(0);
+			if (Character.isWhitespace(lastChar)) {
+				return CapsMode.UPPER;
+			}
+		}
+
+		return CapsMode.LOWER;
+	}
+
+	void setAutoCaps() {
+		setCaps(Objects.requireNonNullElse(getAutoCaps(), CapsMode.LOWER));
+	}
+
 	int getActAction() {
 		return _actAction;
 	}
