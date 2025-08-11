@@ -174,11 +174,13 @@ public final class InputMethodView extends View {
 		conn.setComposingText(buffer, buffer.length());
 
 		final @Nullable String output = ComposeTable.get(buffer);
-		if (output != null) {
-			composeActive = false;
-			conn.setComposingText(output, 1);
-			conn.finishComposingText();
+		if (output == null) {
+			return;
 		}
+
+		composeActive = false;
+		conn.setComposingText(output, 1);
+		conn.finishComposingText();
 	}
 
 	public void doWord(final Direction direction, final boolean delete) {
