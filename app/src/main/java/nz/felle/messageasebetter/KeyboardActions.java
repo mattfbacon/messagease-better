@@ -138,12 +138,13 @@ import java.util.Map;
 					public void execute(final @NonNull InputMethodView view) {
 						// Lazy but works.
 						view.beginCompose();
-						view.typeCharacter('"');
+						view.insertString("\"");
 					}
 				},
 				Motion.UP_RIGHT, new KeyAction('y', KeyAction.NONE),
 				Motion.RIGHT, new SecondaryKeyAction('*'),
 				Motion.LEFT, new SecondaryKeyAction('<'),
+				Motion.DOWN_RIGHT, new SecondaryKeyAction('ß'),
 				Motion.DOWN, new SecondaryKeyAction('–'),
 				Motion.DOWN_LEFT, new SecondaryKeyAction('—')
 			),
