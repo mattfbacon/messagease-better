@@ -8,13 +8,13 @@
 	<color name="black">#FF000000</color>
 	<color name="white">#FFFFFFFF</color>
 
-	<color name="keyboard_background_light">#fef8ec</color>
-	<color name="keyboard_button_outline_light">#005661</color>
-	<color name="keyboard_key_text_color_light">#005661</color>
-	<color name="keyboard_key_text_color_secondary_light">#8ca6a6</color>
+	<color name="keyboard_background_light">@android:color/system_neutral1_10</color>
+	<color name="keyboard_button_outline_light">@android:color/system_neutral1_700</color>
+	<color name="keyboard_key_text_color_light">@android:color/system_neutral1_700</color>
+	<color name="keyboard_key_text_color_secondary_light">@android:color/system_neutral1_300</color>
 
-	<color name="keyboard_background_dark">#1b2932</color>
-	<color name="keyboard_button_outline_dark">#c5cdd3</color>
-	<color name="keyboard_key_text_color_dark">#c5cdd3</color>
-	<color name="keyboard_key_text_color_secondary_dark">#c5cdd3</color>
+	<color name="keyboard_background_dark">@android:color/system_neutral1_900</color>
+	<color name="keyboard_button_outline_dark">@android:color/system_neutral1_100</color>
+	<color name="keyboard_key_text_color_dark">@android:color/system_neutral1_100</color>
+	<color name="keyboard_key_text_color_secondary_dark">@android:color/system_neutral1_500</color>
 </resources>
