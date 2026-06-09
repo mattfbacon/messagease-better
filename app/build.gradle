@@ -3,36 +3,36 @@ plugins {
 }
 
 android {
-	compileSdk 34
+	namespace "nz.felle.messageasebetter"
+	compileSdk {
+		version release(37)
+	}
 
 	defaultConfig {
 		applicationId "nz.felle.messageasebetter"
-		minSdk 34
-		targetSdk 34
+		minSdk 31
+		targetSdk 37
 		versionCode 1
-		versionName "1.0"
+		versionName "1.0.0"
 
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 	}
 
 	buildTypes {
 		release {
-			minifyEnabled false
+			minifyEnabled true
+			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-			signingConfig signingConfigs.debug
 		}
 	}
 	compileOptions {
-		sourceCompatibility JavaVersion.VERSION_16
-		targetCompatibility JavaVersion.VERSION_16
+		sourceCompatibility JavaVersion.VERSION_17
+		targetCompatibility JavaVersion.VERSION_17
 	}
-	namespace 'nz.felle.messageasebetter'
 }
 
 dependencies {
-	implementation 'androidx.appcompat:appcompat:1.6.1'
-	implementation 'com.google.android.material:material:1.9.0'
-	implementation 'androidx.preference:preference:1.2.0'
-	implementation 'androidx.emoji2:emoji2-emojipicker:1.4.0'
-	implementation 'com.google.guava:guava:31.0.1-jre'
+	implementation 'com.google.android.material:material:1.14.0'
+	implementation 'androidx.emoji2:emoji2-emojipicker:1.6.0'
+	implementation 'com.google.guava:guava:33.6.0-jre'
 }

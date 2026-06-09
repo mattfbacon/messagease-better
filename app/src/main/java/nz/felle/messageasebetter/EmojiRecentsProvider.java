@@ -2,8 +2,6 @@ package nz.felle.messageasebetter;
 
 import java.util.Arrays;
 import java.util.List;
-import kotlin.Result;
-import kotlin.coroutines.Continuation;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
