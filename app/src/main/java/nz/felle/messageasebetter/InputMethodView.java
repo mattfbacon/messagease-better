@@ -33,6 +33,8 @@ import androidx.emoji2.emojipicker.EmojiViewItem;
 import androidx.emoji2.emojipicker.RecentEmojiProvider;
 import androidx.emoji2.emojipicker.RecentEmojiProviderAdapter;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -527,34 +529,46 @@ public final class InputMethodView extends View {
 	// Symmetry
 	@SuppressWarnings("UnusedReturnValue")
 	boolean processLine(final int pointerId) {
-		return processLine(Objects.requireNonNull(this.trackedTouches.get(pointerId), "invalid pointer id").line);
+		final var touch = Objects.requireNonNull(this.trackedTouches.get(pointerId), "invalid pointer id");
+		touch.hasExecuted = true;
+		return processLine(touch.line);
 	}
 
-	boolean processLine(final @NonNull Line line) {
-		final float motionThresholdX = this.buttonWidth() / 4;
-		final float motionThresholdY = this.buttonHeight() / 4;
-		final @NonNull Motion motion = line.asMotion(motionThresholdX, motionThresholdY);
+	record KeyPos(int row, int col) {}
 
-		final int actionRow = (int) Math.floor((line.startY - this.getY()) / this.buttonHeight());
-		final float colFractional = (line.startX - this.getX()) / this.buttonWidth();
-		int actionCol = (int) Math.floor(colFractional);
+	@NonNull KeyPos posToCell(final float x, final float y) {
+		final int row = (int) Math.floor((y - this.getY()) / this.buttonHeight());
+		final float colFractional = (x - this.getX()) / this.buttonWidth();
+		int col = (int) Math.floor(colFractional);
 
-		if (actionRow == 3) {
+		if (row == 3) {
 			if (_numMode && colFractional < 1.5) {
-				actionCol = 0;
+				col = 0;
 			} else if (colFractional < 3) {
-				actionCol = 1;
+				col = 1;
 			} else {
-				actionCol = 2;
+				col = 2;
 			}
 		}
 
-		final @Nullable Action action = KeyboardActions.ACTIONS.get(actionRow).get(actionCol).get(motion);
+		return new KeyPos(row, col);
+	}
+
+	float motionThreshold() {
+		return Math.min(this.buttonWidth() / 4, this.buttonHeight() / 4);
+	}
+
+	boolean processLine(final @NonNull Line line) {
+		final @NonNull Motion motion = line.asMotion(this.motionThreshold());
+
+		final var actionPos = posToCell(line.startX, line.startY);
+
+		final @Nullable Action action = KeyboardActions.ACTIONS.get(actionPos.row).get(actionPos.col).get(motion);
 		if (action != null) {
 			action.execute(this);
 			return true;
 		} else {
-			complainAboutMissingAction(actionRow, actionCol, motion);
+			complainAboutMissingAction(actionPos.row, actionPos.col, motion);
 			return false;
 		}
 	}
@@ -591,17 +605,34 @@ public final class InputMethodView extends View {
 			final int pointerId = event.getPointerId(i);
 			final float x = event.getX(i);
 			final float y = event.getY(i);
-			final @NonNull TrackedTouch trackedTouch = trackedTouches.computeIfAbsent(pointerId, (_id) -> new TrackedTouch(this, pointerId, x, y));
+			final @NonNull TrackedTouch trackedTouch = trackedTouches.computeIfAbsent(pointerId, (_id) -> {
+				final var keyPos = posToCell(x, y);
+				final var action = KeyboardActions.ACTIONS.get(keyPos.row).get(keyPos.col).get(Motion.NONE);
+				final var cursorControl = action != null && action.cursorControl();
+
+				return new TrackedTouch(this, pointerId, x, y, cursorControl);
+			});
 
 			processed = true;
+
+			if (trackedTouch.cursorControl) {
+				if (Duration.between(trackedTouch.startTime, Instant.now()).toMillis() > 200) {
+					final float deltaX = trackedTouch.line.deltaX();
+					final int wantedCursorOffset = Math.round(deltaX / 24f);
+					this.moveCursor(wantedCursorOffset - trackedTouch.lastCursorOffset);
+					trackedTouch.lastCursorOffset = wantedCursorOffset;
+					trackedTouch.hasExecuted = true;
+				}
+			}
+
 			trackedTouch.updateEnd(x, y);
 
 			if (released) {
-				trackedTouches.remove(pointerId);
-
-				if (trackedTouch.finish()) {
+				final var hasExecuted = trackedTouch.finish();
+				if (!hasExecuted) {
 					processLine(trackedTouch.line);
 				}
+				trackedTouches.remove(pointerId);
 			}
 		}
 
@@ -652,23 +683,31 @@ public final class InputMethodView extends View {
 
 	static final class TrackedTouch {
 		@NonNull
-		private final Line line;
-		@NonNull
+		public final Line line;
+		@Nullable
 		private final Repeater repeater;
-
-		TrackedTouch(final @NonNull Line line, final @NonNull Repeater repeater) {
-			this.line = line;
-			this.repeater = repeater;
-		}
+		@NonNull
+		public final Instant startTime = Instant.now();
+		public final boolean cursorControl;
+		public int lastCursorOffset = 0;
+		public boolean hasExecuted = false;
 
 		TrackedTouch(
 			final @NonNull InputMethodView view,
 			final int pointerId,
 			final float initialX,
-			final float initialY
+			final float initialY,
+			final boolean cursorControl
 		) {
-			this(new Line(initialX, initialY), new Repeater(view, pointerId));
-			this.repeater.start();
+			this.line = new Line(initialX, initialY);
+			if (cursorControl) {
+				this.cursorControl = true;
+				this.repeater = null;
+			} else {
+				this.cursorControl = false;
+				this.repeater = new Repeater(view, pointerId);
+				this.repeater.start();
+			}
 		}
 
 		void updateEnd(final float endX, final float endY) {
@@ -677,32 +716,10 @@ public final class InputMethodView extends View {
 		}
 
 		boolean finish() {
-			final boolean hasExecuted = this.repeater.hasExecuted();
-			this.repeater.stop();
-			return !hasExecuted;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
+			if (this.repeater != null) {
+				this.repeater.stop();
 			}
-			if (obj == null || obj.getClass() != this.getClass()) {
-				return false;
-			}
-			var that = (TrackedTouch) obj;
-			return Objects.equals(this.line, that.line) && Objects.equals(this.repeater, that.repeater);
+			return this.hasExecuted;
 		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(line, repeater);
-		}
-
-		@Override
-		public @NonNull String toString() {
-			return "TrackedTouch[" + "line=" + line + ", " + "repeater=" + repeater + ']';
-		}
-
 	}
 }

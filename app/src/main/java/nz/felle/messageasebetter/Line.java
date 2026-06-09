@@ -6,8 +6,8 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 public final class Line {
-	public final float startX;
-	public final float startY;
+	public float startX;
+	public float startY;
 	public float endX;
 	public float endY;
 
@@ -55,13 +55,13 @@ public final class Line {
 		return endY - startY;
 	}
 
-	public @NonNull Motion asMotion(final float thresholdX, final float thresholdY) {
-		final float deltaX = deltaX();
-		final float deltaY = deltaY();
-
-		if (Math.abs(deltaX) < thresholdX && Math.abs(deltaY) < thresholdY) {
+	public @NonNull Motion asMotion(final float threshold) {
+		if (this.length() < threshold) {
 			return Motion.NONE;
 		}
+
+		final float deltaX = deltaX();
+		final float deltaY = deltaY();
 
 		// ranges from -180 to 180.
 		// both -180 and 180 are left.

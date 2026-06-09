@@ -246,6 +246,11 @@ import java.util.Map;
 					public void execute(@NonNull InputMethodView view) {
 						view.typeCharacter(' ');
 					}
+
+					@Override
+					public boolean cursorControl() {
+						return true;
+					}
 				},
 				Motion.LEFT, new Action() {
 					@Override

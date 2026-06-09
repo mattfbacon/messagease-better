@@ -11,4 +11,8 @@ abstract class Action {
 	boolean secondary() {
 		return false;
 	}
+
+	boolean cursorControl() {
+		return false;
+	}
 }
