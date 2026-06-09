@@ -1,0 +1,51 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup environment
+        run: sudo apt install zipalign apksigner
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Decode keystore
+        run: echo '${{ secrets.ANDROID_KEYSTORE }}' | base64 -d > release-key.jks
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Align APK
+        run: zipalign -p -v 4 app/build/outputs/apk/release/app-release{-unsigned,}.apk
+
+      - name: Sign APK
+        run: |
+          apksigner sign --ks release-key.jks --ks-pass pass:'${{ secrets.KEYSTORE_PASSWORD }}' \
+            --key-pass pass:'${{ secrets.KEY_PASSWORD }}' app/build/outputs/apk/release/app-release.apk
+
+      - name: Verify signature
+        run: apksigner verify -v --print-certs app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: Release APK
+          path: app/build/outputs/apk/release/app-release.apk
