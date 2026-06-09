@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="8dp">
+
+	<EditText
+		android:id="@+id/test_input"
+		android:hint="@string/test_here"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:minHeight="200dp"
+		android:inputType="text|textMultiLine" android:gravity="top" />
+</LinearLayout>
