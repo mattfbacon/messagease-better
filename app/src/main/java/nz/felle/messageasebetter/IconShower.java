@@ -24,14 +24,6 @@ public final class IconShower extends ActionShower {
 		this.secondary = secondary;
 	}
 
-	/* COMMENTED OUT - unused
-	IconShower(final @NonNull Drawable drawable, final boolean secondary) {
-		this.drawable = drawable;
-		this.drawableId = 0;
-		this.secondary = secondary;
-	}
-	*/
-
 	public void updateDrawable(
 		final @DrawableRes int drawableId, final @NonNull InputMethodView view
 	) {
@@ -41,31 +33,6 @@ public final class IconShower extends ActionShower {
 			this.initialize(view);
 		}
 	}
-
-	//region Boilerplate
-	@Override
-	public boolean equals(final @Nullable Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (obj == null || obj.getClass() != this.getClass()) {
-			return false;
-		}
-		IconShower that = (IconShower) obj;
-		return Objects.equals(this.drawable, that.drawable);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(drawable);
-	}
-
-	@NonNull
-	@Override
-	public String toString() {
-		return "IconShower[" + "drawable=" + drawable + ']';
-	}
-	//endregion
 
 	@Override
 	public void show(

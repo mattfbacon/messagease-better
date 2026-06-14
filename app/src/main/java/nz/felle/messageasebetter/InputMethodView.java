@@ -10,16 +10,15 @@ import android.icu.text.BreakIterator;
 import android.icu.util.ULocale;
 import android.os.LocaleList;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodSubtype;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +31,8 @@ import androidx.emoji2.emojipicker.EmojiPickerView;
 import androidx.emoji2.emojipicker.EmojiViewItem;
 import androidx.emoji2.emojipicker.RecentEmojiProvider;
 import androidx.emoji2.emojipicker.RecentEmojiProviderAdapter;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -42,7 +43,6 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class InputMethodView extends View {
-	static final float HEIGHT = 300f;
 	final @NonNull Selection selection = new Selection(0, 0);
 	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
 	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
@@ -85,6 +85,61 @@ public final class InputMethodView extends View {
 		super(context, attrs, defStyleAttr, defStyleRes);
 	}
 	//endregion
+
+	private final class SuggestionsAdapter extends RecyclerView.Adapter<SuggestionsAdapter.ViewHolder> {
+		private @NonNull List<ComposeTable.GetResult.Suggestion> data = List.of();
+
+		public void update(final @NonNull List<ComposeTable.GetResult.Suggestion> newData) {
+			this.data = newData;
+			notifyDataSetChanged();
+		}
+
+		private static final class ViewHolder extends RecyclerView.ViewHolder {
+			public ViewHolder(final @NonNull View view) {
+				super(view);
+			}
+		}
+
+		@NonNull
+		@Override
+		public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			final var view = new TextView(parent.getContext());
+			view.setTextSize(32);
+			view.setOnClickListener((_view) -> {
+				InputMethodView.this.endCompose(view.getText().toString());
+			});
+			return new ViewHolder(view);
+		}
+
+		@Override
+		public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+			final var item = data.get(position);
+			final var view = (TextView)holder.itemView;
+			view.setText(item.text());
+			view.setTooltipText(item.tooltip());
+		}
+
+		@Override
+		public int getItemCount() {
+			return data.size();
+		}
+	}
+
+	private void setSuggestions(final @Nullable List<ComposeTable.GetResult.Suggestion> suggestions) {
+		final var view = getRootView().<RecyclerView>requireViewById(R.id.suggestions_view);
+
+		if (view.getAdapter() == null) {
+			view.setLayoutManager(new LinearLayoutManager(this.getContext(), RecyclerView.HORIZONTAL, false));
+			view.setAdapter(new SuggestionsAdapter());
+		}
+
+		if (suggestions == null) {
+			view.setVisibility(View.GONE);
+		} else {
+			((SuggestionsAdapter) Objects.requireNonNull(view.getAdapter())).update(suggestions);
+			view.setVisibility(View.VISIBLE);
+		}
+	}
 
 	private float buttonWidth() {
 		return this.getWidth() / 4.0f;
@@ -169,25 +224,34 @@ public final class InputMethodView extends View {
 	public void beginCompose(final @NonNull String prefix) {
 		composeActive = true;
 		composeBuffer.setLength(0);
-		this.appendCompose(prefix);
+		composeBuffer.append(prefix);
+		onComposeChanged();
 	}
 
-	private void appendCompose(final @NonNull String str) {
+	private void onComposeChanged() {
 		assert conn != null;
-
-		composeBuffer.append(str);
 
 		final @NonNull String buffer = composeBuffer.toString();
 		conn.setComposingText(buffer, buffer.length());
 
-		final @Nullable String output = ComposeTable.get(buffer);
-		if (output == null) {
+		final var output = ComposeTable.get(buffer);
+		if (output.resolved() == null && output.isPrefix()) {
+			final var suggestions = output.suggestions();
+			setSuggestions(suggestions);
+
 			return;
 		}
 
+		endCompose(output.resolved() != null ? output.resolved() : "");
+	}
+
+	private void endCompose(final @NonNull String text) {
+		setSuggestions(null);
+		if (conn != null) {
+			conn.setComposingText(text, 1);
+			conn.finishComposingText();
+		}
 		composeActive = false;
-		conn.setComposingText(output, 1);
-		conn.finishComposingText();
 	}
 
 	public void doWord(final Direction direction, final boolean delete) {
@@ -362,7 +426,8 @@ public final class InputMethodView extends View {
 
 	void insertString(final @NonNull String str) {
 		if (composeActive) {
-			appendCompose(str);
+			composeBuffer.append(str);
+			onComposeChanged();
 		} else {
 			assert conn != null;
 			conn.commitText(str, 1);
@@ -395,10 +460,11 @@ public final class InputMethodView extends View {
 			final int delete = Integer.min(-amount, composeBuffer.length());
 			final int newLength = composeBuffer.length() - delete;
 			composeBuffer.setLength(newLength);
-			conn.setComposingText(composeBuffer.toString(), 1);
-			if (composeBuffer.length() == 0) {
-				conn.finishComposingText();
-				composeActive = false;
+			if (newLength == 0) {
+				endCompose("");
+			} else {
+				conn.setComposingText(composeBuffer.toString(), 1);
+				onComposeChanged();
 			}
 
 			return;
@@ -450,17 +516,6 @@ public final class InputMethodView extends View {
 			}
 		}
 		Toast.makeText(getContext(), "could not find a voice input IME", Toast.LENGTH_SHORT).show();
-	}
-
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		final @Nullable FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) getLayoutParams();
-		if (params != null) {
-			params.gravity = Gravity.BOTTOM;
-			params.height = Math.round(getResources().getDisplayMetrics().density * HEIGHT);
-		}
-		setLayoutParams(params);
 	}
 
 	private void drawButton(
@@ -542,8 +597,8 @@ public final class InputMethodView extends View {
 	record KeyPos(int row, int col) {}
 
 	@NonNull KeyPos posToCell(final float x, final float y) {
-		final int row = (int) Math.floor((y - this.getY()) / this.buttonHeight());
-		final float colFractional = (x - this.getX()) / this.buttonWidth();
+		final int row = (int) Math.floor(y / this.buttonHeight());
+		final float colFractional = x / this.buttonWidth();
 		int col = (int) Math.floor(colFractional);
 
 		if (row == 3) {
