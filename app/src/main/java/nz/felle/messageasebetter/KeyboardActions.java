@@ -217,12 +217,11 @@ import java.util.Map;
 						view.takeVoiceInput();
 					}
 				},
-				Motion.DOWN, new CustomAction(R.drawable.ic_bottom_panel_close) {
+				Motion.DOWN, new CustomAction(R.drawable.ic_unicode) {
 					@Override
 					void execute(final @NonNull InputMethodView view) {
-						if (view.service != null) {
-							view.service.requestHideSelf(0);
-						}
+						view.beginCompose("U+");
+						view.setNumMode(true);
 					}
 				}
 			)

@@ -163,8 +163,13 @@ public final class InputMethodView extends View {
 	}
 
 	public void beginCompose() {
+		beginCompose("");
+	}
+
+	public void beginCompose(final @NonNull String prefix) {
 		composeActive = true;
 		composeBuffer.setLength(0);
+		this.appendCompose(prefix);
 	}
 
 	private void appendCompose(final @NonNull String str) {

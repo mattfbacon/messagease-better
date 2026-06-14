@@ -1264,8 +1264,27 @@ public class ComposeTable {
 	// it is considered a failure and `""` is returned,
 	// otherwise `null`, which indicates that the user can continue composing.
 	public static @Nullable String get(final @NonNull String key) {
+		final var UNICODE_PREFIX = "U+";
+
+		if (key.startsWith(UNICODE_PREFIX)) {
+			final var hex = key.substring(UNICODE_PREFIX.length()).trim();
+			try {
+				final var v = Integer.parseInt(hex, 16);
+				if (!key.endsWith("\n")) {
+					return null;
+				}
+				return Character.toString(v);
+			} catch (NumberFormatException e) {
+				return null;
+			}
+		}
+
 		final var entry = table.ceilingEntry(key);
 		if (entry == null || !entry.getKey().startsWith(key)) {
+			// Ensure that the user can type the Unicode input prefix.
+			if (UNICODE_PREFIX.startsWith(key)) {
+				return null;
+			}
 			return "";
 		}
 		if (entry.getKey().equals(key)) {
