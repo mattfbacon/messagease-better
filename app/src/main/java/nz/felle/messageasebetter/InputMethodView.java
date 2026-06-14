@@ -555,7 +555,8 @@ public final class InputMethodView extends View {
 	}
 
 	float motionThreshold() {
-		return Math.min(this.buttonWidth() / 4, this.buttonHeight() / 4);
+		final var factor = 0.3f;
+		return Math.min(this.buttonWidth() / factor, this.buttonHeight() * factor);
 	}
 
 	boolean processLine(final @NonNull Line line) {
