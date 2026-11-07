@@ -64,6 +64,14 @@ public final class InputMethodView extends View {
 	private @NonNull ULocale locale = defaultLocale;
 	private boolean _numMode = false;
 	private @NonNull CapsMode _caps = CapsMode.LOWER;
+	// Automatic capitals and spaces, see SentenceContext
+	private int fieldKind = SentenceContext.FIELD_TEXT;
+	private boolean fieldCapWords = false;         // a name field: every word starts upper case
+	private boolean autoShift = false;             // the upper case was set from the text, not by the user
+	private @Nullable String loweredKey = null;    // text before the cursor when the user lowered an automatic shift
+	private boolean sentenceAuto = false;          // the space before the cursor is the automatic one
+	private @NonNull String sentenceSymbol = "";   // the punctuation that automatic space followed
+	private char sentencePrevChar = ' ';           // the character before that punctuation
 	private int _actAction = EditorInfo.IME_ACTION_UNSPECIFIED;
 	private boolean composeActive = false;
 	private final @NonNull Consumer<EmojiViewItem> emojiListener = (item) -> this.insertString(item.getEmoji());
@@ -514,7 +522,18 @@ public final class InputMethodView extends View {
 		return _caps;
 	}
 
+	/** A caps change made by the user (or at the start of a field). */
 	void setCaps(final @NonNull CapsMode value) {
+		if (value == CapsMode.LOWER && _caps == CapsMode.UPPER && autoShift && conn != null) {
+			// Lowering the automatic shift: it stays lowered until the text before the cursor changes
+			final @Nullable CharSequence before = conn.getTextBeforeCursor(SUGGESTION_CONTEXT_CHARS, 0);
+			loweredKey = before == null ? null : SentenceContext.rtrim(before.toString());
+		}
+		autoShift = false;
+		setCapsInternal(value);
+	}
+
+	private void setCapsInternal(final @NonNull CapsMode value) {
 		final boolean needsUpdate = value != _caps;
 		_caps = value;
 		if (needsUpdate) {
@@ -522,27 +541,70 @@ public final class InputMethodView extends View {
 		}
 	}
 
-	private @Nullable CapsMode getAutoCaps() {
-		if (_numMode || conn == null) {
-			return null;
-		}
-
-		final var beforeText = conn.getTextBeforeCursor(1, 0);
-		if (beforeText == null) {
-			return null;
-		}
-		if (beforeText.length() > 0) {
-			final var lastChar = beforeText.charAt(0);
-			if (Character.isWhitespace(lastChar)) {
-				return CapsMode.UPPER;
-			}
-		}
-
-		return CapsMode.LOWER;
+	/** The kind of field being edited, for the automatic capitals and spaces. */
+	void setFieldInfo(final int inputType) {
+		fieldKind = fieldKind(inputType);
+		fieldCapWords = (inputType & InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT
+			&& ((inputType & InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0
+				|| (inputType & InputType.TYPE_MASK_VARIATION) == InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+		loweredKey = null;
+		endSentenceTracking();
 	}
 
+	private static int fieldKind(final int inputType) {
+		if ((inputType & InputType.TYPE_MASK_CLASS) != InputType.TYPE_CLASS_TEXT) {
+			return SentenceContext.FIELD_OTHER;
+		}
+		return switch (inputType & InputType.TYPE_MASK_VARIATION) {
+			case InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+				InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> SentenceContext.FIELD_EMAIL;
+			case InputType.TYPE_TEXT_VARIATION_URI -> SentenceContext.FIELD_URI;
+			case InputType.TYPE_TEXT_VARIATION_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_FILTER -> SentenceContext.FIELD_OTHER;
+			default -> SentenceContext.FIELD_TEXT;
+		};
+	}
+
+	private @NonNull String textBeforeCursor() {
+		if (conn == null) {
+			return "";
+		}
+		final @Nullable CharSequence before = conn.getTextBeforeCursor(SUGGESTION_CONTEXT_CHARS, 0);
+		return before == null ? "" : before.toString();
+	}
+
+	/**
+	 * The upper case follows the text before the cursor (the start of the text or of a line, after a
+	 * sentence end). A shift set by the user is left alone.
+	 */
 	void setAutoCaps() {
-		setCaps(Objects.requireNonNullElse(getAutoCaps(), CapsMode.LOWER));
+		if (_caps == CapsMode.UPPER_PERMANENT || composeActive) {
+			return;
+		}
+		if (_numMode || conn == null || !Prefs.autoCap(getContext())) {
+			if (autoShift) {
+				autoShift = false;
+				setCapsInternal(CapsMode.LOWER);
+			}
+			return;
+		}
+		final String before = textBeforeCursor();
+		final boolean want = SentenceContext.shouldCapitalize(before, fieldKind, fieldCapWords)
+			&& !SentenceContext.rtrim(before).equals(loweredKey);
+		if (want && _caps == CapsMode.LOWER) {
+			autoShift = true;
+			setCapsInternal(CapsMode.UPPER);
+		} else if (!want && _caps == CapsMode.UPPER && autoShift) {
+			autoShift = false;
+			setCapsInternal(CapsMode.LOWER);
+		}
+	}
+
+	/** The punctuation typed last no longer decides what a space or a character does. */
+	private void endSentenceTracking() {
+		sentenceAuto = false;
 	}
 
 	int getActAction() {
@@ -589,8 +651,60 @@ public final class InputMethodView extends View {
 	}
 
 	void typeString(final @NonNull String str) {
-		setCaps(getCaps().next());
-		insertString(str);
+		if (composeActive) {
+			setCapsInternal(getCaps().next());
+			insertString(str);
+			return;
+		}
+		String value = str;
+		if (value.equals("\n") && sentenceAuto) {
+			delete(-1);                // the automatic space is not wanted at the end of a line
+		}
+		if (isSentenceEnd(value)) {
+			enterSentenceEnd(value);
+		} else {
+			value = sentenceCharEntered(value);
+			insertString(value);
+		}
+		autoShift = false;
+		setCapsInternal(getCaps().next());
+		setAutoCaps();
+	}
+
+	private static boolean isSentenceEnd(final @NonNull String symbol) {
+		return symbol.length() == 1 && ".,;:!?".indexOf(symbol.charAt(0)) >= 0;
+	}
+
+	/** Enters punctuation followed by an automatic space, if what comes before shows it ends a sentence or clause. */
+	private void enterSentenceEnd(final @NonNull String symbol) {
+		if (sentenceAuto && SentenceContext.repeatsSentenceEnd(sentenceSymbol, symbol)) {
+			delete(-1);                // "..", "?!": the symbol replaces the automatic space
+		}
+		final String before = textBeforeCursor();
+		final SentenceContext.Spacing spacing = SentenceContext.after(before, symbol, fieldKind);
+		final boolean autoSpace = Prefs.autoSpace(getContext())
+			&& (spacing == SentenceContext.Spacing.NORMAL || spacing == SentenceContext.Spacing.NO_CAP);
+		insertString(autoSpace ? symbol + " " : symbol);
+		sentenceSymbol = symbol;
+		sentencePrevChar = before.isEmpty() ? ' ' : before.charAt(before.length() - 1);
+		sentenceAuto = autoSpace;
+	}
+
+	/**
+	 * The character about to be entered may show that the automatic space after the last sentence
+	 * end was wrong (128. + 3, ". + )"): it is erased. Anything entered ends the sentence end.
+	 */
+	private @NonNull String sentenceCharEntered(final @NonNull String value) {
+		String result = value;
+		if (sentenceAuto && SentenceContext.joinsAutoSpace(sentenceSymbol, sentencePrevChar, textBeforeCursor(), value)) {
+			final String before = textBeforeCursor();
+			delete(-1);
+			if (Character.isLetter(value.charAt(0)) && autoShift && SentenceContext.isLowerAbbreviation(before)) {
+				result = value.toLowerCase(Locale.ENGLISH);   // e.g.: the automatic upper case is undone
+			}
+		}
+		endSentenceTracking();
+		return result;
 	}
 
 	void insertString(final @NonNull String str) {
@@ -631,6 +745,7 @@ public final class InputMethodView extends View {
 
 	void delete(final int amount) {
 		assert conn != null;
+		endSentenceTracking();
 
 		if (composeActive) {
 			if (amount >= 0) {

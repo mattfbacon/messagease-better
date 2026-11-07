@@ -77,9 +77,12 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 			currentView.setActAction(imeOptions & EditorInfo.IME_MASK_ACTION);
 		}
 
-		if (startCaps) {
+		currentView.setFieldInfo(info == null ? 0 : info.inputType);
+
+		if (startCaps && Prefs.autoCap(this)) {
 			currentView.setCaps(CapsMode.UPPER);
 		} else {
+			currentView.setCaps(CapsMode.LOWER);
 			currentView.setAutoCaps();
 		}
 
@@ -106,6 +109,7 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		assert currentView != null;
 		currentView.selection.start = newSelStart;
 		currentView.selection.end = newSelEnd;
+		currentView.setAutoCaps();
 		currentView.updateSuggestions();
 	}
 }

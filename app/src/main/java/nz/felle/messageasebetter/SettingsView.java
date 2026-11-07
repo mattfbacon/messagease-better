@@ -26,6 +26,10 @@ final class SettingsView extends LinearLayout {
 		card.setCornerRadius(dp(28));
 		setBackground(card);
 
+		addView(row(context.getString(R.string.auto_space), context.getString(R.string.auto_space_summary),
+			Prefs.autoSpace(context), (checked) -> Prefs.setAutoSpace(context, checked)));
+		addView(row(context.getString(R.string.auto_cap), context.getString(R.string.auto_cap_summary),
+			Prefs.autoCap(context), (checked) -> Prefs.setAutoCap(context, checked)));
 		addView(row(context.getString(R.string.suggestions), context.getString(R.string.suggestions_summary),
 			Prefs.suggestions(context), (checked) -> Prefs.setSuggestions(context, checked)));
 		addView(linkRow(context.getString(R.string.circumference_keys), context.getString(R.string.circumference_keys_summary), () -> {
