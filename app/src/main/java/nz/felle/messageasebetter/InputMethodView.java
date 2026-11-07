@@ -525,9 +525,11 @@ public final class InputMethodView extends View {
 		final float width,
 		final float height
 	) {
-		final float strokeWidth = KeyboardPaints.STROKE_WIDTH;
-		final float radius = KeyboardPaints.RADIUS;
-		canvas.drawRoundRect(x + strokeWidth, y + strokeWidth, x + width - strokeWidth, y + height - strokeWidth, radius, radius, paints.buttonPaint);
+		final float gap = paints.gap;
+		final float radius = paints.radius;
+		// Function keys (fourth column) get a stronger tonal fill than the letter keys
+		final boolean function = x + width / 2 > buttonWidth() * 3;
+		canvas.drawRoundRect(x + gap, y + gap, x + width - gap, y + height - gap, radius, radius, function ? paints.functionFillPaint : paints.keyFillPaint);
 	}
 
 	private void drawButton(
@@ -561,8 +563,10 @@ public final class InputMethodView extends View {
 
 		final float centerX = x + (width / 2);
 		final float centerY = y + (height / 2);
-		final float offsetX = (centerX - x) - 40;
-		final float offsetY = (centerY - y) - 40;
+		// Keep circumference glyphs clear of the key edge, proportionally to their size
+		final float inset = paints.gap + paints.smallKeyTextPaint.getTextSize() * 0.9f;
+		final float offsetX = (centerX - x) - inset;
+		final float offsetY = (centerY - y) - inset;
 
 		for (final Map.Entry<Motion, Action> entry : keys.entrySet()) {
 			final @NonNull Motion motion = entry.getKey();

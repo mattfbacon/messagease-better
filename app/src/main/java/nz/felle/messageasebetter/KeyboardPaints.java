@@ -2,16 +2,26 @@ package nz.felle.messageasebetter;
 
 import android.content.res.Resources;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
 
 public class KeyboardPaints {
-	static final float STROKE_WIDTH = 10.0f;
-	static final float RADIUS = 20.0f;
+	// Gaps between keys and corner radius, in dp (scaled by density in the constructor)
+	static final float GAP_DP = 3.0f;
+	static final float RADIUS_DP = 14.0f;
+	static final float KEY_TEXT_SP = 26.0f;
+	static final float SECONDARY_TEXT_SP = 17.0f;
+	final float gap;
+	final float radius;
 	final @ColorInt int backgroundColor;
 	final @NonNull Paint buttonPaint;
+	final @NonNull Paint keyFillPaint;
+	final @NonNull Paint functionFillPaint;
+	private final float density;
+	private final float scaledDensity;
 	final @NonNull Paint keyTextPaint;
 	final @NonNull Paint smallKeyTextPaint;
 	final @NonNull Paint secondaryKeyTextPaint;
@@ -20,6 +30,12 @@ public class KeyboardPaints {
 
 	KeyboardPaints(final @NonNull Resources resources, final @NonNull Resources.Theme theme) {
 		nightMode = resources.getConfiguration().isNightModeActive();
+		density = resources.getDisplayMetrics().density;
+		scaledDensity = density * resources.getConfiguration().fontScale;
+		gap = GAP_DP * density;
+		radius = RADIUS_DP * density;
+		keyFillPaint = makeFillPaint(nightMode ? R.color.keyboard_key_fill_dark : R.color.keyboard_key_fill_light, resources, theme);
+		functionFillPaint = makeFillPaint(nightMode ? R.color.keyboard_function_fill_dark : R.color.keyboard_function_fill_light, resources, theme);
 
 		backgroundColor = getColor(nightMode ? R.color.keyboard_background_dark : R.color.keyboard_background_light, resources, theme);
 		buttonPaint = makeButtonPaint(resources, theme);
@@ -42,9 +58,22 @@ public class KeyboardPaints {
 	) {
 		final Paint paint = new Paint();
 		paint.setColor(getColor(nightMode ? R.color.keyboard_button_outline_dark : R.color.keyboard_button_outline_light, resources, theme));
-		paint.setStrokeWidth(STROKE_WIDTH);
+		paint.setStrokeWidth(4.0f * density);
+		paint.setAntiAlias(true);
 		paint.setStyle(Paint.Style.STROKE);
 		paint.setStrokeCap(Paint.Cap.ROUND);
+		return paint;
+	}
+
+	private @NonNull Paint makeFillPaint(
+		final @ColorRes int colorId,
+		final @NonNull Resources resources,
+		final @NonNull Resources.Theme theme
+	) {
+		final Paint paint = new Paint();
+		paint.setColor(getColor(colorId, resources, theme));
+		paint.setStyle(Paint.Style.FILL);
+		paint.setAntiAlias(true);
 		return paint;
 	}
 
@@ -55,7 +84,8 @@ public class KeyboardPaints {
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setColor(getColor(nightMode ? R.color.keyboard_key_text_color_dark : R.color.keyboard_key_text_color_light, resources, theme));
 		paint.setStyle(Paint.Style.FILL);
-		paint.setTextSize(60.0f);
+		paint.setAntiAlias(true);
+		paint.setTextSize(KEY_TEXT_SP * scaledDensity);
 		return paint;
 	}
 
@@ -63,7 +93,8 @@ public class KeyboardPaints {
 		final @NonNull Resources resources, final @NonNull Resources.Theme theme
 	) {
 		final Paint paint = makeKeyTextPaint(resources, theme);
-		paint.setTextSize(32.0f);
+		paint.setTextSize(SECONDARY_TEXT_SP * scaledDensity);
+		paint.setTypeface(Typeface.create(Typeface.DEFAULT, 500, false));
 		return paint;
 	}
 

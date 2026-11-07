@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="keyboard_background_light">@android:color/system_neutral1_10</color>
-	<color name="keyboard_button_outline_light">@android:color/system_neutral1_700</color>
-	<color name="keyboard_key_text_color_light">@android:color/system_neutral1_700</color>
-	<color name="keyboard_key_text_color_secondary_light">@android:color/system_neutral1_300</color>
+	<!-- Material You (Material 3) tonal roles built from the system dynamic palette. -->
+	<color name="keyboard_background_light">@android:color/system_neutral1_50</color>
+	<color name="keyboard_key_fill_light">@android:color/system_accent2_100</color>
+	<color name="keyboard_function_fill_light">@android:color/system_accent1_200</color>
+	<color name="keyboard_button_outline_light">@android:color/system_accent1_600</color>
+	<color name="keyboard_key_text_color_light">@android:color/system_neutral1_900</color>
+	<color name="keyboard_key_text_color_secondary_light">@android:color/system_accent1_700</color>
 
 	<color name="keyboard_background_dark">@android:color/system_neutral1_900</color>
-	<color name="keyboard_button_outline_dark">@android:color/system_neutral1_100</color>
-	<color name="keyboard_key_text_color_dark">@android:color/system_neutral1_100</color>
-	<color name="keyboard_key_text_color_secondary_dark">@android:color/system_neutral1_500</color>
+	<color name="keyboard_key_fill_dark">@android:color/system_accent2_700</color>
+	<color name="keyboard_function_fill_dark">@android:color/system_accent1_600</color>
+	<color name="keyboard_button_outline_dark">@android:color/system_accent1_200</color>
+	<color name="keyboard_key_text_color_dark">@android:color/system_neutral1_50</color>
+	<color name="keyboard_key_text_color_secondary_dark">@android:color/system_accent1_100</color>
 
 	<color name="ic_launcher_background">@color/keyboard_background_light</color>
 </resources>
