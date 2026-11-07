@@ -564,7 +564,7 @@ public final class InputMethodView extends View {
 		final float centerX = x + (width / 2);
 		final float centerY = y + (height / 2);
 		// Keep circumference glyphs clear of the key edge, proportionally to their size
-		final float inset = paints.gap + paints.smallKeyTextPaint.getTextSize() * 0.9f;
+		final float inset = paints.gap + paints.smallKeyTextPaint.getTextSize() * 0.6f;
 		final float offsetX = (centerX - x) - inset;
 		final float offsetY = (centerY - y) - inset;
 

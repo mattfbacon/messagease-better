@@ -13,7 +13,8 @@ public class KeyboardPaints {
 	static final float GAP_DP = 3.0f;
 	static final float RADIUS_DP = 14.0f;
 	static final float KEY_TEXT_SP = 26.0f;
-	static final float SECONDARY_TEXT_SP = 17.0f;
+	static final float SECONDARY_ALPHA = 0.75f;
+	static final float SECONDARY_TEXT_SP = 14.0f;
 	final float gap;
 	final float radius;
 	final @ColorInt int backgroundColor;
@@ -95,6 +96,7 @@ public class KeyboardPaints {
 		final Paint paint = makeKeyTextPaint(resources, theme);
 		paint.setTextSize(SECONDARY_TEXT_SP * scaledDensity);
 		paint.setTypeface(Typeface.create(Typeface.DEFAULT, 500, false));
+		paint.setAlpha(Math.round(paint.getAlpha() * SECONDARY_ALPHA));
 		return paint;
 	}
 
@@ -103,6 +105,7 @@ public class KeyboardPaints {
 	) {
 		final Paint paint = makeSmallKeyTextPaint(resources, theme);
 		paint.setColor(getColor(nightMode ? R.color.keyboard_key_text_color_secondary_dark : R.color.keyboard_key_text_color_secondary_light, resources, theme));
+		paint.setAlpha(Math.round(paint.getAlpha() * SECONDARY_ALPHA));
 		return paint;
 	}
 }

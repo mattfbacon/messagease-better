@@ -44,6 +44,7 @@ public final class IconShower extends ActionShower {
 	) {
 		assert drawable != null;
 		drawable.setTint(dark ? darkColor : lightColor);
+		drawable.setAlpha(paint.getAlpha());
 
 		final int size = Math.round(paint.getTextSize());
 		final float offset = paint.getTextSize() / 2;
