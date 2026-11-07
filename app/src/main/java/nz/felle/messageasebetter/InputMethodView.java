@@ -401,7 +401,7 @@ public final class InputMethodView extends View {
 			case EditorInfo.IME_ACTION_PREVIOUS -> R.drawable.ic_navigate_before;
 			case EditorInfo.IME_ACTION_SEARCH -> R.drawable.ic_search;
 			case EditorInfo.IME_ACTION_SEND -> R.drawable.ic_send;
-			case EditorInfo.IME_ACTION_NONE -> R.drawable.empty;
+			case EditorInfo.IME_ACTION_NONE -> R.drawable.ic_newline;
 			default -> R.drawable.ic_keyboard_return;
 		};
 
@@ -564,7 +564,7 @@ public final class InputMethodView extends View {
 		final float centerX = x + (width / 2);
 		final float centerY = y + (height / 2);
 		// Keep circumference glyphs clear of the key edge, proportionally to their size
-		final float inset = paints.gap + paints.smallKeyTextPaint.getTextSize() * 0.6f;
+		final float inset = paints.gap * 1.35f + paints.smallKeyTextPaint.getTextSize() * 0.5f;
 		final float offsetX = (centerX - x) - inset;
 		final float offsetY = (centerY - y) - inset;
 
@@ -584,6 +584,13 @@ public final class InputMethodView extends View {
 				}
 
 				final @NonNull PointF thisLetter = motion.offset(centerX, centerY, offsetX, offsetY);
+
+				// Clamp so the glyph's bounds never cross the key edge
+				final float halfW = actionShower.width(paint) / 2;
+				final float halfH = actionShower.height(paint) / 2;
+				final float pad = paints.gap * 1.35f;
+				thisLetter.x = Math.max(x + pad + halfW, Math.min(x + width - pad - halfW, thisLetter.x));
+				thisLetter.y = Math.max(y + pad + halfH, Math.min(y + height - pad - halfH, thisLetter.y));
 
 				actionShower.show(canvas, thisLetter.x, thisLetter.y, paint, isDark());
 			}

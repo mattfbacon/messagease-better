@@ -10,6 +10,16 @@ public abstract class ActionShower {
 		@NonNull Canvas canvas, float centerX, float centerY, @NonNull Paint paint, boolean dark
 	);
 
+	/** Rendered width when drawn with the given paint. */
+	float width(@NonNull Paint paint) {
+		return paint.getTextSize();
+	}
+
+	/** Rendered height when drawn with the given paint. */
+	float height(@NonNull Paint paint) {
+		return paint.getTextSize();
+	}
+
 	void initialize(@NonNull InputMethodView view) {
 	}
 }

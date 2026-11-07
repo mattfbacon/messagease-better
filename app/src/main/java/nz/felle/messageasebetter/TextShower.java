@@ -10,7 +10,6 @@ import java.util.Objects;
 
 final class TextShower extends ActionShower {
 	public @NonNull String text;
-	private float textOffset = Float.NaN;
 
 	//region Record Boilerplate
 	TextShower(@NonNull String text) {
@@ -41,6 +40,28 @@ final class TextShower extends ActionShower {
 	}
 	//endregion
 
+	private final Rect bounds = new Rect();
+	private float cachedSize = Float.NaN;
+
+	private void measure(final @NonNull Paint paint) {
+		if (cachedSize != paint.getTextSize()) {
+			paint.getTextBounds(text, 0, text.length(), bounds);
+			cachedSize = paint.getTextSize();
+		}
+	}
+
+	@Override
+	float width(final @NonNull Paint paint) {
+		measure(paint);
+		return bounds.width();
+	}
+
+	@Override
+	float height(final @NonNull Paint paint) {
+		measure(paint);
+		return bounds.height();
+	}
+
 	public void show(
 		final @NonNull Canvas canvas,
 		final float centerX,
@@ -48,12 +69,9 @@ final class TextShower extends ActionShower {
 		final @NonNull Paint paint,
 		final boolean dark
 	) {
-		// we do a little caching
-		if (Float.isNaN(textOffset)) {
-			final @NonNull Rect bounds = new Rect();
-			paint.getTextBounds(text, 0, text.length(), bounds);
-			textOffset = (float) bounds.height() / 2.0f;
-		}
-		canvas.drawText(text, centerX, centerY + textOffset, paint);
+		measure(paint);
+		// centre the ink (not the baseline box) so glyphs with descenders stay inside the key
+		final float baseline = centerY - (bounds.top + bounds.bottom) / 2.0f;
+		canvas.drawText(text, centerX, baseline, paint);
 	}
 }
