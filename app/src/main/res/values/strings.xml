@@ -1,4 +1,7 @@
 <resources>
 	<string name="app_name">MessagEase Better</string>
 	<string name="test_here">Test the keyboard here</string>
+	<string name="settings">Settings</string>
+	<string name="suggestions">Suggestions</string>
+	<string name="suggestions_summary">Show word completions and next-word suggestions above the keys (English)</string>
 </resources>

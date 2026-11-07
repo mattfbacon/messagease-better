@@ -40,6 +40,15 @@ import java.util.Map;
 			),
 			// first row, fourth column
 			Map.of(
+				Motion.NONE, new CustomAction(R.drawable.ic_settings) {
+					@Override void execute(final @NonNull InputMethodView view) {
+						view.openSettings();
+					}
+
+					@Override boolean secondary() {
+						return false;
+					}
+				}
 			)
 		),
 		// second row

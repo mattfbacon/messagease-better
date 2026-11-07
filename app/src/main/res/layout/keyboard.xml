@@ -12,6 +12,12 @@
 		android:orientation="vertical">
 
 		<androidx.recyclerview.widget.RecyclerView
+			android:id="@+id/word_suggestions_view"
+			android:layout_width="match_parent"
+			android:layout_height="48dp"
+			android:visibility="gone" />
+
+		<androidx.recyclerview.widget.RecyclerView
 			android:id="@+id/suggestions_view"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"

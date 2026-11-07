@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.icu.text.BreakIterator;
 import android.icu.util.ULocale;
 import android.os.LocaleList;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -34,8 +35,10 @@ import androidx.emoji2.emojipicker.RecentEmojiProviderAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -139,6 +142,163 @@ public final class InputMethodView extends View {
 			((SuggestionsAdapter) Objects.requireNonNull(view.getAdapter())).update(suggestions);
 			view.setVisibility(View.VISIBLE);
 		}
+	}
+
+	//region Word suggestions
+	/** How much text before the cursor is looked at to find the word being typed. */
+	private static final int SUGGESTION_CONTEXT_CHARS = 100;
+	private static final int SUGGESTION_SLOTS = 3;
+	private static volatile @Nullable Predictor predictor = null;
+	private static boolean predictorLoading = false;
+	private boolean suggestionsEnabled = false;
+	private @NonNull String typedPrefix = "";
+	private @Nullable WordSuggestionsAdapter wordAdapter = null;
+
+	private final class WordSuggestionsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+		private @NonNull List<String> words = List.of();
+
+		void update(final @NonNull List<String> newWords) {
+			if (!words.equals(newWords)) {
+				words = newWords;
+				notifyDataSetChanged();
+			}
+		}
+
+		@NonNull
+		@Override
+		public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			final var view = new TextView(parent.getContext());
+			view.setTextSize(20);
+			view.setTextColor(paints.keyTextPaint.getColor());
+			view.setGravity(android.view.Gravity.CENTER);
+			view.setSingleLine(true);
+			view.setLayoutParams(new RecyclerView.LayoutParams(parent.getWidth() / SUGGESTION_SLOTS, ViewGroup.LayoutParams.MATCH_PARENT));
+			return new RecyclerView.ViewHolder(view) {};
+		}
+
+		@Override
+		public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+			final var view = (TextView) holder.itemView;
+			final String word = words.get(position);
+			view.setText(word);
+			view.setOnClickListener((_view) -> pickSuggestion(word));
+		}
+
+		@Override
+		public int getItemCount() {
+			return words.size();
+		}
+	}
+
+	/** Turn the suggestions on or off (the setting, and whether this kind of field takes them). */
+	void setSuggestionsEnabled(final boolean enabled) {
+		suggestionsEnabled = enabled;
+		if (enabled && predictor == null) {
+			loadPredictor();
+		}
+		updateSuggestions();
+	}
+
+	private void loadPredictor() {
+		if (predictorLoading) {
+			return;
+		}
+		predictorLoading = true;
+		final Context context = getContext().getApplicationContext();
+		new Thread(() -> {
+			try (InputStream in = context.getResources().openRawResource(R.raw.en_dict)) {
+				predictor = Predictor.load(in);
+			} catch (java.io.IOException e) {
+				android.util.Log.e("MessagEaseBetter", "could not load the dictionary", e);
+			}
+			predictorLoading = false;
+			post(this::updateSuggestions);
+		}, "dictionary-loader").start();
+	}
+
+	/** Suggestions for the word before the cursor: completions, or the next word after a space. */
+	void updateSuggestions() {
+		final var strip = getRootView().<RecyclerView>findViewById(R.id.word_suggestions_view);
+		if (strip == null) {
+			return;
+		}
+		if (!suggestionsEnabled) {
+			strip.setVisibility(View.GONE);
+			return;
+		}
+		if (wordAdapter == null) {
+			strip.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+			wordAdapter = new WordSuggestionsAdapter();
+			strip.setAdapter(wordAdapter);
+		}
+		strip.setBackgroundColor(paints.backgroundColor);
+		strip.setVisibility(View.VISIBLE);
+
+		typedPrefix = "";
+		List<String> shown = List.of();
+		final @Nullable Predictor p = predictor;
+		if (p != null && conn != null && !composeActive && !selection.isNonCursor()) {
+			final @Nullable CharSequence before = conn.getTextBeforeCursor(SUGGESTION_CONTEXT_CHARS, 0);
+			final @Nullable CharSequence after = conn.getTextAfterCursor(1, 0);
+			// In the middle of a word nothing is suggested
+			final boolean inWord = after != null && after.length() > 0 && Character.isLetter(after.charAt(0));
+			final @Nullable String[] context = before == null || inWord ? null
+				: Predictor.context(before.toString(), before.length() < SUGGESTION_CONTEXT_CHARS);
+			if (context != null) {
+				typedPrefix = context[1];
+				shown = new ArrayList<>(p.suggest(context[0], context[1], SUGGESTION_SLOTS));
+				// Best suggestion in the middle, as on other keyboards
+				if (shown.size() == SUGGESTION_SLOTS) {
+					shown.add(0, shown.remove(1));
+				}
+			}
+		}
+		wordAdapter.update(shown);
+	}
+
+	/** A suggestion was tapped: it replaces the word typed so far and a space follows. */
+	private void pickSuggestion(final @NonNull String word) {
+		if (conn == null) {
+			return;
+		}
+		final String typed = typedPrefix;
+		final @Nullable CharSequence before = conn.getTextBeforeCursor(typed.length(), 0);
+		if (before == null || !before.toString().equals(typed)) {
+			updateSuggestions();   // the text moved on since the suggestions were made
+			return;
+		}
+		conn.beginBatchEdit();
+		if (!typed.isEmpty()) {
+			conn.deleteSurroundingText(typed.length(), 0);
+		}
+		conn.commitText(word + " ", 1);
+		conn.endBatchEdit();
+		setAutoCaps();
+		updateSuggestions();
+	}
+
+	/** The editor is shown for a field that takes suggestions only if they are on and it is plain text. */
+	static boolean fieldTakesSuggestions(final @Nullable EditorInfo info) {
+		if (info == null
+			|| (info.inputType & InputType.TYPE_MASK_CLASS) != InputType.TYPE_CLASS_TEXT
+			|| (info.inputType & InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0) {
+			return false;
+		}
+		return switch (info.inputType & InputType.TYPE_MASK_VARIATION) {
+			case InputType.TYPE_TEXT_VARIATION_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
+				InputType.TYPE_TEXT_VARIATION_URI,
+				InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+				InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS,
+				InputType.TYPE_TEXT_VARIATION_FILTER -> false;
+			default -> true;
+		};
+	}
+	//endregion
+
+	void openSettings() {
+		KeyboardDialog.show(this, (context) -> new SettingsView(context, paints.backgroundColor, paints.keyTextPaint.getColor()));
 	}
 
 	private float buttonWidth() {

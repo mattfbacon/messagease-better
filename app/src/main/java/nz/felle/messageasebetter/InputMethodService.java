@@ -27,6 +27,13 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 	}
 
 	@Override
+	public void onWindowHidden() {
+		// A floating dialog is attached to the keyboard window, which is going away.
+		KeyboardDialog.dismiss();
+		super.onWindowHidden();
+	}
+
+	@Override
 	public void onStartInputView(final @Nullable EditorInfo info, final boolean restarting) {
 		super.onStartInputView(info, restarting);
 		assert currentView != null;
@@ -80,6 +87,8 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		currentView.setLocale(locale);
 
 		currentView.endEmoji();
+
+		currentView.setSuggestionsEnabled(Prefs.suggestions(this) && InputMethodView.fieldTakesSuggestions(info));
 	}
 
 	@Override
@@ -95,5 +104,6 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		assert currentView != null;
 		currentView.selection.start = newSelStart;
 		currentView.selection.end = newSelEnd;
+		currentView.updateSuggestions();
 	}
 }
