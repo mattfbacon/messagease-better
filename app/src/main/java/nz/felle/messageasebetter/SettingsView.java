@@ -28,6 +28,18 @@ final class SettingsView extends LinearLayout {
 
 		addView(row(context.getString(R.string.suggestions), context.getString(R.string.suggestions_summary),
 			Prefs.suggestions(context), (checked) -> Prefs.setSuggestions(context, checked)));
+		addView(linkRow(context.getString(R.string.circumference_keys), context.getString(R.string.circumference_keys_summary), () -> {
+			KeyboardDialog.dismiss();
+			context.startActivity(new android.content.Intent(context, KeysActivity.class)
+				.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
+		}));
+	}
+
+	private @NonNull LinearLayout linkRow(final @NonNull String title, final @NonNull String summary, final @NonNull Runnable onClick) {
+		final LinearLayout row = row(title, summary, false, (checked) -> {});
+		row.removeViewAt(1);
+		row.setOnClickListener((v) -> onClick.run());
+		return row;
 	}
 
 	private int dp(final float v) {

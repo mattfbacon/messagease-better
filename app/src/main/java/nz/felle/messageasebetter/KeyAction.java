@@ -71,7 +71,7 @@ final class KeyAction extends Action {
 		} else {
 			if (lastShownKey != key) {
 				lastShownKey = key;
-				shower.text = Character.toString(key).intern();
+				shower.setText(Character.toString(key).intern());
 			}
 			return shower;
 		}

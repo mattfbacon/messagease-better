@@ -4,4 +4,24 @@
 	<string name="settings">Settings</string>
 	<string name="suggestions">Suggestions</string>
 	<string name="suggestions_summary">Show word completions and next-word suggestions above the keys (English)</string>
+	<string name="circumference_keys">Circumference keys</string>
+	<string name="circumference_keys_summary">Change the symbols on the edges of each key</string>
+	<string name="reset_all">Reset all to defaults</string>
+	<string name="reset_all_confirm">Restore every circumference key to its default?</string>
+	<string name="edit_key">Edit key</string>
+	<string name="save">Save</string>
+	<string name="reset">Default</string>
+	<string name="kind_text">Types text</string>
+	<string name="kind_compose">Starts compose sequence</string>
+	<string name="glyph_hint">Symbol (any unicode, or U+XXXX; empty disables)</string>
+	<string name="compose_label">Sequence entered when compose starts</string>
+	<string name="compose_hint">e.g. \"</string>
+	<string name="tab_letters">Letters</string>
+	<string name="tab_numbers">Numbers</string>
+	<string name="tab_function">Function column</string>
+	<string name="help_letters">Tap a symbol, or an empty tile, to change it. Underlined symbols start a compose sequence. The amber arrows are shift and caps lock. Faint keys are fixed.</string>
+	<string name="help_numbers">The symbols around the keys in number mode. Ones you haven\'t changed here start from the default symbols. Faint keys are fixed.</string>
+	<string name="help_function">The function column. The settings key and the empty tiles can be changed; the other function keys are fixed. A settings key must remain somewhere in letter mode.</string>
+	<string name="kind_settings">Opens the settings</string>
+	<string name="need_settings_key">There must be a settings key in letter mode (the Letters tab or the function column), or you could not get back to this editor. Put \"Opens the settings\" on one of its keys, or reset the settings key to its default.</string>
 </resources>

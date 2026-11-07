@@ -43,6 +43,13 @@ final class TextShower extends ActionShower {
 	private final Rect bounds = new Rect();
 	private float cachedSize = Float.NaN;
 
+	void setText(final @NonNull String newText) {
+		if (!text.equals(newText)) {
+			text = newText;
+			cachedSize = Float.NaN;
+		}
+	}
+
 	private void measure(final @NonNull Paint paint) {
 		if (cachedSize != paint.getTextSize()) {
 			paint.getTextBounds(text, 0, text.length(), bounds);

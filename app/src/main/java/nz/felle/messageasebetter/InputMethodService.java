@@ -39,6 +39,8 @@ public final class InputMethodService extends android.inputmethodservice.InputMe
 		assert currentView != null;
 
 		currentView.updateInputConnection(getCurrentInputConnection());
+		// Key bindings may have changed in the editor since the keys were last drawn.
+		currentView.invalidate();
 
 		int inputType = 0;
 		int imeOptions = 0;

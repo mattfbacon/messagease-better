@@ -48,6 +48,11 @@ import java.util.Objects;
 public final class InputMethodView extends View {
 	final @NonNull Selection selection = new Selection(0, 0);
 	private final @NonNull KeyboardPaints paints = new KeyboardPaints(getResources(), getContext().getTheme());
+
+	{
+		KeyBindings.ensureLoaded(getContext());
+	}
+
 	private final @NonNull ULocale defaultLocale = ULocale.forLocale(LocaleList.getDefault().get(0));
 	private @NonNull
 	final IconShower _actShower = new IconShower(R.drawable.ic_keyboard_return, false);
@@ -580,8 +585,12 @@ public final class InputMethodView extends View {
 	}
 
 	void typeCharacter(final char ch) {
+		typeString(Character.toString(ch));
+	}
+
+	void typeString(final @NonNull String str) {
 		setCaps(getCaps().next());
-		insertString(Character.toString(ch));
+		insertString(str);
 	}
 
 	void insertString(final @NonNull String str) {
@@ -806,7 +815,7 @@ public final class InputMethodView extends View {
 
 		final var actionPos = posToCell(line.startX, line.startY);
 
-		final @Nullable Action action = KeyboardActions.ACTIONS.get(actionPos.row).get(actionPos.col).get(motion);
+		final @Nullable Action action = KeyboardActions.layout(_numMode).get(actionPos.row).get(actionPos.col).get(motion);
 		if (action != null) {
 			action.execute(this);
 			return true;
@@ -850,7 +859,7 @@ public final class InputMethodView extends View {
 			final float y = event.getY(i);
 			final @NonNull TrackedTouch trackedTouch = trackedTouches.computeIfAbsent(pointerId, (_id) -> {
 				final var keyPos = posToCell(x, y);
-				final var action = KeyboardActions.ACTIONS.get(keyPos.row).get(keyPos.col).get(Motion.NONE);
+				final var action = KeyboardActions.layout(_numMode).get(keyPos.row).get(keyPos.col).get(Motion.NONE);
 				final var cursorControl = action != null && action.cursorControl();
 
 				return new TrackedTouch(this, pointerId, x, y, cursorControl);
@@ -899,7 +908,7 @@ public final class InputMethodView extends View {
 			final float y = row * buttonHeight;
 			for (int col = 0; col < 4; ++col) {
 				final float x = col * buttonWidth;
-				drawButton(canvas, x, y, buttonWidth, buttonHeight, KeyboardActions.ACTIONS.get(row).get(col));
+				drawButton(canvas, x, y, buttonWidth, buttonHeight, KeyboardActions.layout(_numMode).get(row).get(col));
 			}
 		}
 

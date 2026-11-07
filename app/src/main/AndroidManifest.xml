@@ -18,6 +18,11 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity
+			android:name=".KeysActivity"
+			android:exported="false"
+			android:label="@string/circumference_keys"
+			android:windowSoftInputMode="adjustResize" />
 		<service
 			android:name=".InputMethodService"
 			android:exported="true"
