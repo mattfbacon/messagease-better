@@ -430,6 +430,17 @@ public final class InputMethodView extends View {
 			onComposeChanged();
 		} else {
 			assert conn != null;
+			if ((str.equals("a") || str.equals("A")) && !selection.isNonCursor()) {
+				// A degree sign followed by "a" becomes "å" (and "A" becomes "Å").
+				final @Nullable CharSequence before = conn.getTextBeforeCursor(1, 0);
+				if (before != null && before.toString().equals("°")) {
+					conn.beginBatchEdit();
+					conn.deleteSurroundingText(1, 0);
+					conn.commitText(str.equals("a") ? "å" : "Å", 1);
+					conn.endBatchEdit();
+					return;
+				}
+			}
 			conn.commitText(str, 1);
 		}
 	}
